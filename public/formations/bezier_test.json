@@ -1,0 +1,66 @@
+{
+  "formation_id": "bezier_test",
+  "meta": {
+    "source": "synthetic"
+  },
+  "spawn": [
+    {
+      "t_ms": 0,
+      "type": "ace",
+      "x_norm": 10,
+      "y_norm": 10,
+      "hp": 2,
+      "path": {
+        "type": "bezier",
+        "duration_ms": 5000,
+        "points_norm": [
+          {
+            "x": 10,
+            "y": 10
+          },
+          {
+            "x": 30,
+            "y": 30
+          },
+          {
+            "x": 60,
+            "y": 10
+          },
+          {
+            "x": 80,
+            "y": 40
+          }
+        ]
+      }
+    },
+    {
+      "t_ms": 1200,
+      "type": "bruiser",
+      "x_norm": 90,
+      "y_norm": 10,
+      "hp": 3,
+      "path": {
+        "type": "bezier",
+        "duration_ms": 5500,
+        "points_norm": [
+          {
+            "x": 90,
+            "y": 10
+          },
+          {
+            "x": 70,
+            "y": 35
+          },
+          {
+            "x": 40,
+            "y": 15
+          },
+          {
+            "x": 20,
+            "y": 60
+          }
+        ]
+      }
+    }
+  ]
+}

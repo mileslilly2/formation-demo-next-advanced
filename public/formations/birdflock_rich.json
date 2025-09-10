@@ -1,0 +1,80 @@
+{
+  "formation_id": "birdflock_rich",
+  "meta": {
+    "source": "movebank"
+  },
+  "spawn": [
+    {
+      "t_ms": 0,
+      "type": "scout",
+      "x_norm": 0,
+      "y_norm": 0,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 70
+      }
+    },
+    {
+      "t_ms": 200,
+      "type": "scout",
+      "x_norm": 4,
+      "y_norm": 0,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 70
+      }
+    },
+    {
+      "t_ms": 400,
+      "type": "scout",
+      "x_norm": 14,
+      "y_norm": 0,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 70
+      }
+    },
+    {
+      "t_ms": 600,
+      "type": "scout",
+      "x_norm": 49,
+      "y_norm": 0,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 70
+      }
+    },
+    {
+      "t_ms": 800,
+      "type": "scout",
+      "x_norm": 74,
+      "y_norm": 0,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 70
+      }
+    },
+    {
+      "t_ms": 1000,
+      "type": "scout",
+      "x_norm": 99,
+      "y_norm": 0,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 70
+      }
+    }
+  ]
+}

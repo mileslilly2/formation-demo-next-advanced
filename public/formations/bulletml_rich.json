@@ -1,0 +1,72 @@
+{
+  "formation_id": "bulletml_rich",
+  "meta": {
+    "source": "bulletml_demo",
+    "difficulty": 2
+  },
+  "spawn": [
+    {
+      "t_ms": 500,
+      "type": "ace",
+      "x_norm": 20,
+      "y_norm": 0,
+      "vx_px_s": -40,
+      "vy_px_s": 80,
+      "hp": 1
+    },
+    {
+      "t_ms": 680,
+      "type": "ace",
+      "x_norm": 30,
+      "y_norm": 0,
+      "vx_px_s": -25,
+      "vy_px_s": 80,
+      "hp": 1
+    },
+    {
+      "t_ms": 860,
+      "type": "ace",
+      "x_norm": 40,
+      "y_norm": 0,
+      "vx_px_s": -15,
+      "vy_px_s": 80,
+      "hp": 1
+    },
+    {
+      "t_ms": 1040,
+      "type": "ace",
+      "x_norm": 50,
+      "y_norm": 0,
+      "vx_px_s": 0,
+      "vy_px_s": 80,
+      "hp": 1
+    },
+    {
+      "t_ms": 1220,
+      "type": "ace",
+      "x_norm": 60,
+      "y_norm": 0,
+      "vx_px_s": 15,
+      "vy_px_s": 80,
+      "hp": 1
+    },
+    {
+      "t_ms": 1400,
+      "type": "ace",
+      "x_norm": 70,
+      "y_norm": 0,
+      "vx_px_s": 25,
+      "vy_px_s": 80,
+      "hp": 1
+    },
+    {
+      "t_ms": 1580,
+      "type": "ace",
+      "x_norm": 80,
+      "y_norm": 0,
+      "vx_px_s": 40,
+      "vy_px_s": 80,
+      "hp": 1
+    }
+  ]
+}

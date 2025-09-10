@@ -1,0 +1,152 @@
+{
+  "formation_id": "bulletml_imported",
+  "meta": {
+    "source": "bulletml_import"
+  },
+  "spawn": [
+    {
+      "t_ms": 500,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 0.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 650,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 30.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 800,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 60.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 950,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 90.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 1100,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 120.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 1250,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 150.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 1400,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 180.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 1550,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 210.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 1700,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 240.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 1850,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 270.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 2000,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 300.0,
+        "speed_px_s": 110
+      }
+    },
+    {
+      "t_ms": 2150,
+      "type": "scout",
+      "x_norm": 50,
+      "y_norm": 5,
+      "hp": 1,
+      "path": {
+        "type": "bulletml",
+        "angle_deg": 330.0,
+        "speed_px_s": 110
+      }
+    }
+  ]
+}

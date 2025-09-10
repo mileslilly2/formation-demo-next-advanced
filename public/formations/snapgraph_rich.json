@@ -1,0 +1,152 @@
+{
+  "formation_id": "snapgraph_rich",
+  "meta": {
+    "source": "snap"
+  },
+  "spawn": [
+    {
+      "t_ms": 0,
+      "type": "bruiser",
+      "x_norm": 89,
+      "y_norm": 21,
+      "hp": 2,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 60
+      }
+    },
+    {
+      "t_ms": 160,
+      "type": "scout",
+      "x_norm": 89,
+      "y_norm": 80,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 80
+      }
+    },
+    {
+      "t_ms": 320,
+      "type": "scout",
+      "x_norm": 6,
+      "y_norm": 30,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 100
+      }
+    },
+    {
+      "t_ms": 480,
+      "type": "scout",
+      "x_norm": 28,
+      "y_norm": 59,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 60
+      }
+    },
+    {
+      "t_ms": 640,
+      "type": "bruiser",
+      "x_norm": 13,
+      "y_norm": 99,
+      "hp": 2,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 80
+      }
+    },
+    {
+      "t_ms": 800,
+      "type": "scout",
+      "x_norm": 76,
+      "y_norm": 94,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 100
+      }
+    },
+    {
+      "t_ms": 960,
+      "type": "scout",
+      "x_norm": 70,
+      "y_norm": 48,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 60
+      }
+    },
+    {
+      "t_ms": 1120,
+      "type": "scout",
+      "x_norm": 66,
+      "y_norm": 0,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 80
+      }
+    },
+    {
+      "t_ms": 1280,
+      "type": "bruiser",
+      "x_norm": 46,
+      "y_norm": 49,
+      "hp": 2,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 100
+      }
+    },
+    {
+      "t_ms": 1440,
+      "type": "scout",
+      "x_norm": 94,
+      "y_norm": 52,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 60
+      }
+    },
+    {
+      "t_ms": 1600,
+      "type": "scout",
+      "x_norm": 99,
+      "y_norm": 31,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 80
+      }
+    },
+    {
+      "t_ms": 1760,
+      "type": "scout",
+      "x_norm": 0,
+      "y_norm": 68,
+      "hp": 1,
+      "path": {
+        "type": "line",
+        "vx_px_s": 0,
+        "vy_px_s": 100
+      }
+    }
+  ]
+}
