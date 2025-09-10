@@ -1,0 +1,112 @@
+{
+  "formations": [
+    {
+      "id": "swarm",
+      "ships": [
+        {
+          "x_norm": 50,
+          "y_norm": 50
+        },
+        {
+          "x_norm": 48,
+          "y_norm": 52
+        },
+        {
+          "x_norm": 52,
+          "y_norm": 48
+        },
+        {
+          "x_norm": 46,
+          "y_norm": 49
+        },
+        {
+          "x_norm": 54,
+          "y_norm": 51
+        }
+      ],
+      "behavior": "orbit"
+    },
+    {
+      "id": "hex",
+      "ships": [
+        {
+          "x_norm": 50,
+          "y_norm": 50
+        },
+        {
+          "x_norm": 55,
+          "y_norm": 50
+        },
+        {
+          "x_norm": 52,
+          "y_norm": 54
+        },
+        {
+          "x_norm": 48,
+          "y_norm": 54
+        },
+        {
+          "x_norm": 45,
+          "y_norm": 50
+        },
+        {
+          "x_norm": 48,
+          "y_norm": 46
+        },
+        {
+          "x_norm": 52,
+          "y_norm": 46
+        }
+      ],
+      "behavior": "static"
+    },
+    {
+      "id": "trail",
+      "ships": [
+        {
+          "x_norm": 50,
+          "y_norm": 50
+        },
+        {
+          "x_norm": 50,
+          "y_norm": 55
+        },
+        {
+          "x_norm": 50,
+          "y_norm": 60
+        },
+        {
+          "x_norm": 50,
+          "y_norm": 65
+        }
+      ],
+      "behavior": "follow"
+    },
+    {
+      "id": "band",
+      "ships": [
+        {
+          "x_norm": 40,
+          "y_norm": 50
+        },
+        {
+          "x_norm": 45,
+          "y_norm": 50
+        },
+        {
+          "x_norm": 50,
+          "y_norm": 50
+        },
+        {
+          "x_norm": 55,
+          "y_norm": 50
+        },
+        {
+          "x_norm": 60,
+          "y_norm": 50
+        }
+      ],
+      "behavior": "line"
+    }
+  ]
+}
