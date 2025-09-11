@@ -94,7 +94,7 @@ export function renderEnemies(
     }
   }
 }
-
+/*
 // --- Bullets ---
 export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) {
   for (const b of bullets) {
@@ -104,6 +104,7 @@ export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) 
     ctx.fill();
   }
 }
+*/
 
 // --- HUD ---
 export function renderHUD(ctx: CanvasRenderingContext2D) {
