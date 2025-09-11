@@ -17,9 +17,6 @@ import { loadEnemyFormation } from '../lib/enemyLoader';
 import { setBackground } from '../lib/render';
 
 // inside useEffect, after you have ctx and c
-const bgImg = new Image();
-bgImg.src = '/sprites/pillars_of_creation.png';
-bgImg.onload = () => setBackground(bgImg);
 
 
 type Props = { selectedFile: string };
