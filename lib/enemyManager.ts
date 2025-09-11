@@ -10,10 +10,7 @@ export function spawnEnemies(
 ): number {
   if (!enemySpec || !enemySpec.spawn) return spawnIndex;
   const tElapsed = performance.now() - startTime;
-  while (
-    spawnIndex < enemySpec.spawn.length &&
-    enemySpec.spawn[spawnIndex].t_ms <= tElapsed
-  ) {
+  while (spawnIndex < enemySpec.spawn.length && enemySpec.spawn[spawnIndex].t_ms <= tElapsed) {
     const s = enemySpec.spawn[spawnIndex];
     enemies.push({
       x: ((s.x_norm ?? 50) / 100) * cw,
@@ -48,14 +45,14 @@ export function updateEnemies(
         e.cooldown = 1.2;
       } else if (Math.random() < 0.3 && playerFormation.length > 0) {
         let target = playerFormation[0];
-        let bestDist = Infinity;
+        let best = Infinity;
         for (const s of playerFormation) {
           const d = Math.abs(s.x - e.x) + Math.abs(s.y - e.y);
-          if (d < bestDist) { bestDist = d; target = s; }
+          if (d < best) { best = d; target = s; }
         }
         const dx = target.x - e.x;
         const dy = target.y - e.y;
-        const mag = Math.sqrt(dx * dx + dy * dy);
+        const mag = Math.max(1e-3, Math.sqrt(dx*dx + dy*dy));
         bullets.push({ x: e.x, y: e.y + 10, vx: dx / mag * 200, vy: dy / mag * 200, type: 'enemy_sniper', owner: 'enemy' });
         e.cooldown = 2.0;
       } else {

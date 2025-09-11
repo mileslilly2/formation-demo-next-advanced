@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { useInput } from '../lib/inputManager';
 import { updateBullets, renderBullets } from '../lib/bulletManager';
@@ -24,15 +24,11 @@ type Props = { selectedFile: string };
 export default function GameCanvas({ selectedFile }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // ✅ player state tracked with React state so `useInput` can see it
-  const [player, setPlayer] = useState({
-    x: 0,
-    y: 0,
-    speed: 300,
-  });
+  // player state as ref to avoid React re-renders every frame
+  const playerRef = useRef({ x: 0, y: 0, speed: 300 });
 
-  // ✅ input hook at top level
-  const getInput = useInput(canvasRef, () => player.x);
+  // input hook at top (valid React hook usage). It reads player x via the ref.
+  const getInput = useInput(canvasRef, () => playerRef.current.x);
 
   useEffect(() => {
     const c = canvasRef.current!;
@@ -66,27 +62,27 @@ export default function GameCanvas({ selectedFile }: Props) {
           c.clientWidth,
           c.clientHeight
         );
+      } else {
+        // fallback single ship
+        playerFormation = [{ x: c.clientWidth / 2, y: c.clientHeight - 100 }];
       }
     });
 
     // --- LOAD ENEMIES ---
     let enemySpec: any = null;
-    if (selectedFile)
-      loadEnemyFormation(selectedFile).then((spec) => (enemySpec = spec));
+    if (selectedFile) loadEnemyFormation(selectedFile).then((spec) => (enemySpec = spec));
 
     // --- GAME STATE ---
-    setPlayer({
-      x: c.clientWidth / 2,
-      y: c.clientHeight - 100,
-      speed: 300,
-    });
+    playerRef.current.x = c.clientWidth / 2;
+    playerRef.current.y = c.clientHeight - 100;
+
     const bullets: Bullet[] = [];
     const enemies: Enemy[] = [];
     let spawnIndex = 0;
-    let startTime = performance.now();
+    const startTime = performance.now();
 
     // --- FORMATION SWAP ---
-    window.addEventListener('keydown', (e) => {
+    const swapKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'f' && insectSpec) {
         formationIndex = (formationIndex + 1) % insectSpec.formations.length;
         playerFormation = buildFormation(
@@ -95,33 +91,39 @@ export default function GameCanvas({ selectedFile }: Props) {
           c.clientHeight
         );
       }
-    });
+    };
+    window.addEventListener('keydown', swapKey);
 
-    // --- LOOP ---
+    // --- LOOP (FPS-capped) ---
     const trailHistory: { x: number; y: number }[] = [];
     const MAX_HISTORY = 200;
+    const FPS = 30;
+    let lastRAF = 0;
     let last = performance.now();
 
     function loop(now: number) {
+      // FPS cap
+      if (now - lastRAF < 1000 / FPS) {
+        requestAnimationFrame(loop);
+        return;
+      }
+      lastRAF = now;
+
       const dt = (now - last) / 1000;
       last = now;
-      const cw = c.clientWidth,
-        ch = c.clientHeight;
+      const cw = c.clientWidth, ch = c.clientHeight;
 
       // INPUT
       const { move, fire } = getInput();
-      const newX = Math.max(
-        20,
-        Math.min(cw - 20, player.x + move * player.speed * dt)
-      );
-      setPlayer((p) => ({ ...p, x: newX }));
+      const p = playerRef.current;
+      p.x = Math.max(20, Math.min(cw - 20, p.x + move * p.speed * dt));
 
       // trail history
-      trailHistory.unshift({ x: newX, y: player.y });
+      trailHistory.unshift({ x: p.x, y: p.y });
       if (trailHistory.length > MAX_HISTORY) trailHistory.pop();
 
       // FORMATION
-      updateFormation(playerFormation, { ...player, x: newX }, trailHistory, now);
+      updateFormation(playerFormation, p, trailHistory, now);
 
       // FIRING
       if (fire) {
@@ -131,14 +133,7 @@ export default function GameCanvas({ selectedFile }: Props) {
       }
 
       // ENEMIES
-      spawnIndex = spawnEnemies(
-        enemies,
-        enemySpec,
-        spawnIndex,
-        startTime,
-        cw,
-        ch
-      );
+      spawnIndex = spawnEnemies(enemies, enemySpec, spawnIndex, startTime, cw, ch);
       updateEnemies(enemies, bullets, dt, playerFormation);
 
       // BULLETS
@@ -149,10 +144,24 @@ export default function GameCanvas({ selectedFile }: Props) {
 
       // RENDER
       renderBackground(ctx, cw, ch);
-renderPlayerFormation(ctx, playerFormation, player, spriteImg, spriteMeta, now);
-renderEnemies(ctx, enemies, spriteImg, spriteMeta, now);
-renderBullets(ctx, bullets);
-renderHUD(ctx);
+      if (spriteImg && spriteMeta) {
+        renderPlayerFormation(ctx, playerFormation, p, spriteImg, spriteMeta, now);
+        renderEnemies(ctx, enemies, spriteImg, spriteMeta, now);
+      } else {
+        // fallback circles until sprites load
+        renderPlayerFormation(ctx, playerFormation, p, null as any, null as any, now);
+        renderEnemies(ctx, enemies, null as any, null as any, now);
+      }
+      renderBullets(ctx, bullets);
+      renderHUD(ctx);
+
+      // DEBUG TEXT
+      ctx.fillStyle = 'lime';
+      ctx.font = '12px monospace';
+      ctx.fillText(
+        `img:${!!spriteImg} frames:${spriteMeta?.frames ?? 0} cols:${spriteMeta?.cols ?? 0} rows:${spriteMeta?.rows ?? 0} formation:${playerFormation.length}`,
+        10, 40
+      );
 
       requestAnimationFrame(loop);
     }
@@ -160,8 +169,9 @@ renderHUD(ctx);
 
     return () => {
       window.removeEventListener('resize', resize);
+      window.removeEventListener('keydown', swapKey);
     };
-  }, [selectedFile, getInput, player]);
+  }, [selectedFile]); // intentionally NOT depending on getInput (stable via ref)
 
   return (
     <canvas

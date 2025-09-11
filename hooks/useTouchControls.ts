@@ -19,21 +19,19 @@ export default function useTouchControls(canvasRef: React.RefObject<HTMLCanvasEl
     const c = canvasRef.current;
     if (!c) return;
 
-    // --- Gesture controls ---
+    // gestures
     function handleTouchStart(e: TouchEvent) {
       const rect = c.getBoundingClientRect();
       const t = e.touches[0];
       state.current.touchX = t.clientX - rect.left;
       state.current.firing = (t.clientY - rect.top) > rect.height / 2;
     }
-
     function handleTouchMove(e: TouchEvent) {
       const rect = c.getBoundingClientRect();
       const t = e.touches[0];
       state.current.touchX = t.clientX - rect.left;
       state.current.firing = (t.clientY - rect.top) > rect.height / 2;
     }
-
     function handleTouchEnd() {
       state.current.touchX = null;
       state.current.firing = false;
@@ -43,21 +41,18 @@ export default function useTouchControls(canvasRef: React.RefObject<HTMLCanvasEl
     c.addEventListener('touchmove', handleTouchMove);
     c.addEventListener('touchend', handleTouchEnd);
 
-    // --- Virtual buttons ---
+    // virtual buttons
     function attachButton(id: string, key: TouchButtons) {
       const btn = document.getElementById(id);
       if (!btn) return;
-
       const press = () => { state.current[key] = true; };
       const release = () => { state.current[key] = false; };
-
       btn.addEventListener('touchstart', press);
       btn.addEventListener('mousedown', press);
       btn.addEventListener('touchend', release);
       btn.addEventListener('mouseup', release);
       btn.addEventListener('mouseleave', release);
     }
-
     attachButton('btn-left', 'leftHeld');
     attachButton('btn-right', 'rightHeld');
     attachButton('btn-fire', 'fireHeld');
