@@ -2,7 +2,14 @@
 import React, { useEffect, useRef } from 'react';
 
 import { useInput } from '../lib/inputManager';
-import { updateBullets, renderBullets } from '../lib/bulletManager';
+import { updateBullets } from '../lib/bulletManager';
+// before:
+// import { updateBullets, renderBullets } from '../lib/bulletManager';
+
+// after:
+
+import { renderBullets } from '../lib/render';
+
 import { handleCollisions } from '../lib/collision';
 import {
   renderBackground,

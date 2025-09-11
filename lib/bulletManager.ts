@@ -10,7 +10,7 @@ export function updateBullets(bullets: Bullet[], dt: number, ch: number) {
   }
 }
 
-export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) {
+/*export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) {
   for (const b of bullets) {
     switch (b.type) {
       case 'small': ctx.fillStyle = '#ff0'; ctx.fillRect(b.x - 2, b.y - 6, 4, 8); break;
@@ -24,4 +24,5 @@ export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) 
     }
   }
 }
+*/
   
