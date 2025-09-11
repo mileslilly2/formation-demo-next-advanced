@@ -1,16 +1,11 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
 
+
 import { useInput } from '../lib/inputManager';
 import { updateBullets } from '../lib/bulletManager';
-import { renderBullets } from '../lib/render';
+import { renderBullets, renderBackground, renderPlayerFormation, renderEnemies, renderHUD } from '../lib/render';
 import { handleCollisions } from '../lib/collision';
-import {
-  renderBackground,
-  renderPlayerFormation,
-  renderEnemies,
-  renderHUD,
-} from '../lib/render';
 import { spawnEnemies, updateEnemies } from '../lib/enemyManager';
 import { updateFormation } from '../lib/formationManager';
 import { fireFromShip } from '../lib/weaponManager';
@@ -19,6 +14,13 @@ import { Bullet, Enemy, PlayerShip } from '../lib/types';
 import { loadSprite } from '../lib/spriteLoader';
 import { loadInsectFormations, buildFormation } from '../lib/formationLoader';
 import { loadEnemyFormation } from '../lib/enemyLoader';
+import { setBackground } from '../lib/render';
+
+// inside useEffect, after you have ctx and c
+const bgImg = new Image();
+bgImg.src = '/sprites/pillars_of_creation.png';
+bgImg.onload = () => setBackground(bgImg);
+
 
 type Props = { selectedFile: string };
 
@@ -34,6 +36,10 @@ export default function GameCanvas({ selectedFile }: Props) {
   useEffect(() => {
     const c = canvasRef.current!;
     const ctx = c.getContext('2d')!;
+
+    const bgImg = new Image();
+    bgImg.src = '/sprites/pillars_of_creation.png';
+    bgImg.onload = () => setBackground(bgImg);
 
     // --------- LOAD ASSETS ---------
     let spriteImg: HTMLImageElement | null = null;
@@ -75,22 +81,16 @@ export default function GameCanvas({ selectedFile }: Props) {
       const dpr = window.devicePixelRatio || 1;
       const { clientWidth, clientHeight } = c;
 
-      // Make internal resolution match the CSS size * DPR
       c.width = Math.max(1, Math.floor(clientWidth * dpr));
       c.height = Math.max(1, Math.floor(clientHeight * dpr));
-
-      // Normalize drawing units to CSS pixels
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // Reposition player near bottom center on resize
       playerRef.current.x = clientWidth / 2;
       playerRef.current.y = clientHeight - 100;
 
-      // Rebuild formation for the new canvas size
       rebuildFormation();
     }
 
-    // Initial size + listener
     resize();
     window.addEventListener('resize', resize);
 
@@ -99,6 +99,10 @@ export default function GameCanvas({ selectedFile }: Props) {
     const enemies: Enemy[] = [];
     let spawnIndex = 0;
     const startTime = performance.now();
+
+    // Camera scroll position
+    let cameraY = 0;
+    const scrollSpeed = 50; // pixels per second
 
     // Swap formation with 'F'
     const onKeyDown = (e: KeyboardEvent) => {
@@ -115,7 +119,6 @@ export default function GameCanvas({ selectedFile }: Props) {
     let last = performance.now();
 
     function loop(now: number) {
-      // FPS cap
       if (now - lastRAF < 1000 / FPS) {
         requestAnimationFrame(loop);
         return;
@@ -128,12 +131,15 @@ export default function GameCanvas({ selectedFile }: Props) {
       const cw = c.clientWidth;
       const ch = c.clientHeight;
 
+      // SCROLL CAMERA
+      cameraY += scrollSpeed * dt;
+
       // INPUT
       const { move, fire } = getInput();
       const p = playerRef.current;
       p.x = Math.max(20, Math.min(cw - 20, p.x + move * p.speed * dt));
 
-      // FORMATION UPDATE (uses current canvas size)
+      // FORMATION
       updateFormation(playerFormation, p, [], now);
 
       // FIRING
@@ -153,19 +159,16 @@ export default function GameCanvas({ selectedFile }: Props) {
       // COLLISIONS
       handleCollisions(bullets, enemies, playerFormation);
 
-      // RENDER (background uses actual screen size)
-      renderBackground(ctx, cw, ch);
-
+      // RENDER
+      renderBackground(ctx, cw, ch, cameraY);
       if (spriteImg && spriteMeta) {
-        renderPlayerFormation(ctx, playerFormation, p, spriteImg, spriteMeta, now);
-        renderEnemies(ctx, enemies, spriteImg, spriteMeta, now);
+        renderPlayerFormation(ctx, playerFormation, p, spriteImg, spriteMeta, now, cameraY);
+        renderEnemies(ctx, enemies, spriteImg, spriteMeta, now, cameraY);
       } else {
-        // fallback circles until sprites load
-        renderPlayerFormation(ctx, playerFormation, p, null as any, null as any, now);
-        renderEnemies(ctx, enemies, null as any, null as any, now);
+        renderPlayerFormation(ctx, playerFormation, p, null as any, null as any, now, cameraY);
+        renderEnemies(ctx, enemies, null as any, null as any, now, cameraY);
       }
-
-      renderBullets(ctx, bullets);
+      renderBullets(ctx, bullets, cameraY);
       renderHUD(ctx);
 
       requestAnimationFrame(loop);
@@ -173,7 +176,6 @@ export default function GameCanvas({ selectedFile }: Props) {
 
     requestAnimationFrame(loop);
 
-    // Cleanup
     return () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', onKeyDown);
@@ -184,8 +186,8 @@ export default function GameCanvas({ selectedFile }: Props) {
     <canvas
       ref={canvasRef}
       style={{
-        width: '100vw',   // fill the screen width
-        height: '100dvh', // fill the visible screen height (mobile-safe)
+        width: '100vw',
+        height: '100dvh',
         display: 'block',
         touchAction: 'none',
       }}

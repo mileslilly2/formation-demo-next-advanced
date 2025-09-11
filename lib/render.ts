@@ -1,12 +1,32 @@
 import { Bullet, Enemy, PlayerShip } from './types';
 
-// --- Background ---
-export function renderBackground(ctx: CanvasRenderingContext2D, cw: number, ch: number) {
-  ctx.fillStyle = '#061025';
-  ctx.fillRect(0, 0, cw, ch);
+let bg: HTMLImageElement | null = null;
+export function setBackground(img: HTMLImageElement) {
+  bg = img;
 }
 
-// --- Ship Sprite Drawing (supports frames, cols, rows, frame_duration_ms) ---
+// --- Background ---
+export function renderBackground(
+  ctx: CanvasRenderingContext2D,
+  cw: number,
+  ch: number,
+  cameraY: number = 0
+) {
+  if (bg) {
+    ctx.drawImage(
+      bg,
+      0, cameraY,          // slice of background
+      bg.width, ch,        // source width/height
+      0, 0,                // draw at top-left
+      cw, ch               // stretch to canvas
+    );
+  } else {
+    ctx.fillStyle = '#061025';
+    ctx.fillRect(0, 0, cw, ch);
+  }
+}
+
+// --- Ship Sprite Drawing ---
 export function drawShipSprite(
   ctx: CanvasRenderingContext2D,
   spriteImg: HTMLImageElement,
@@ -54,23 +74,25 @@ export function renderPlayerFormation(
   fallbackPlayer: { x: number; y: number },
   spriteImg: HTMLImageElement | null,
   spriteMeta: any,
-  now: number
+  now: number,
+  cameraY: number = 0
 ) {
   if (formation.length > 0) {
     for (const ship of formation) {
+      const drawY = ship.y - cameraY;
       if (spriteImg && spriteMeta?.frame_width && spriteMeta?.frame_height) {
-        drawShipSprite(ctx, spriteImg, spriteMeta, ship.x, ship.y, now);
+        drawShipSprite(ctx, spriteImg, spriteMeta, ship.x, drawY, now);
       } else {
         ctx.fillStyle = '#6cf';
         ctx.beginPath();
-        ctx.arc(ship.x, ship.y, 12, 0, Math.PI * 2);
+        ctx.arc(ship.x, drawY, 12, 0, Math.PI * 2);
         ctx.fill();
       }
     }
   } else {
     ctx.fillStyle = '#6cf';
     ctx.beginPath();
-    ctx.arc(fallbackPlayer.x, fallbackPlayer.y, 14, 0, Math.PI * 2);
+    ctx.arc(fallbackPlayer.x, fallbackPlayer.y - cameraY, 14, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -81,44 +103,42 @@ export function renderEnemies(
   enemies: Enemy[],
   spriteImg?: HTMLImageElement | null,
   spriteMeta?: any,
-  now: number = 0
+  now: number = 0,
+  cameraY: number = 0
 ) {
   for (const e of enemies) {
+    const drawY = e.y - cameraY;
     if (spriteImg && spriteMeta?.frame_width && spriteMeta?.frame_height) {
-      drawShipSprite(ctx, spriteImg, spriteMeta, e.x, e.y, now);
+      drawShipSprite(ctx, spriteImg, spriteMeta, e.x, drawY, now);
     } else {
       ctx.fillStyle = '#f66';
       ctx.beginPath();
-      ctx.arc(e.x, e.y, 14, 0, Math.PI * 2);
+      ctx.arc(e.x, drawY, 14, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 }
-export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) {
+
+// --- Bullets ---
+export function renderBullets(
+  ctx: CanvasRenderingContext2D,
+  bullets: Bullet[],
+  cameraY: number = 0
+) {
   for (const b of bullets) {
+    const drawY = b.y - cameraY;
     switch (b.type) {
-      case 'small': ctx.fillStyle = '#ff0'; ctx.fillRect(b.x - 2, b.y - 6, 4, 8); break;
-      case 'spread': ctx.fillStyle = '#0f0'; ctx.fillRect(b.x - 2, b.y - 6, 4, 8); break;
-      case 'laser': ctx.fillStyle = '#0ff'; ctx.fillRect(b.x - 1, b.y - 16, 2, 20); break;
-      case 'wide': ctx.fillStyle = '#f0f'; ctx.fillRect(b.x - 6, b.y - 8, 12, 12); break;
-      case 'enemy_basic': ctx.fillStyle = 'red'; ctx.fillRect(b.x - 2, b.y - 6, 4, 8); break;
-      case 'enemy_spread': ctx.fillStyle = 'orange'; ctx.fillRect(b.x - 3, b.y - 6, 6, 8); break;
-      case 'enemy_sniper': ctx.fillStyle = 'purple'; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); break;
-      default: ctx.fillStyle = '#fff'; ctx.fillRect(b.x - 2, b.y - 8, 4, 12);
+      case 'small': ctx.fillStyle = '#ff0'; ctx.fillRect(b.x - 2, drawY - 6, 4, 8); break;
+      case 'spread': ctx.fillStyle = '#0f0'; ctx.fillRect(b.x - 2, drawY - 6, 4, 8); break;
+      case 'laser': ctx.fillStyle = '#0ff'; ctx.fillRect(b.x - 1, drawY - 16, 2, 20); break;
+      case 'wide': ctx.fillStyle = '#f0f'; ctx.fillRect(b.x - 6, drawY - 8, 12, 12); break;
+      case 'enemy_basic': ctx.fillStyle = 'red'; ctx.fillRect(b.x - 2, drawY - 6, 4, 8); break;
+      case 'enemy_spread': ctx.fillStyle = 'orange'; ctx.fillRect(b.x - 3, drawY - 6, 6, 8); break;
+      case 'enemy_sniper': ctx.fillStyle = 'purple'; ctx.beginPath(); ctx.arc(b.x, drawY, 4, 0, Math.PI*2); ctx.fill(); break;
+      default: ctx.fillStyle = '#fff'; ctx.fillRect(b.x - 2, drawY - 8, 4, 12);
     }
   }
 }
-/*
-// --- Bullets ---
-export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) {
-  for (const b of bullets) {
-    ctx.fillStyle = b.owner === 'player' ? '#6f6' : '#f33';
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-*/
 
 // --- HUD ---
 export function renderHUD(ctx: CanvasRenderingContext2D) {
