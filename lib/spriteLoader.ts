@@ -1,10 +1,14 @@
 export async function loadSprite() {
-  const metaRes = await fetch('/sprites/insect_shapes_sheet.json');
-  if (!metaRes.ok) return {img:null, meta:null};
-  const meta = await metaRes.json();
-  return new Promise<{img:HTMLImageElement, meta:any}>((resolve) => {
-    const img = new Image();
-    img.src = meta.image || '/sprites/insect_shapes_sheet.png';
-    img.onload = () => resolve({img, meta});
-  });
+  const meta = await fetch('/sprites/insect_shapes_sheet.json').then(r => r.json());
+  const img = new Image();
+  img.src = meta.image || '/sprites/insect_shapes_sheet.png';
+
+  // auto-detect frames if not in JSON
+  await new Promise<void>((res) => { img.onload = () => res(); });
+
+  if (!meta.frames) {
+    meta.frames = Math.floor(img.width / meta.frame_width);
+  }
+
+  return { img, meta };
 }

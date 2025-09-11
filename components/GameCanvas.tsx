@@ -149,10 +149,10 @@ export default function GameCanvas({ selectedFile }: Props) {
 
       // RENDER
       renderBackground(ctx, cw, ch);
-      renderPlayerFormation(ctx, playerFormation, player, spriteImg, spriteMeta);
-      renderEnemies(ctx, enemies);
-      renderBullets(ctx, bullets);
-      renderHUD(ctx);
+renderPlayerFormation(ctx, playerFormation, player, spriteImg, spriteMeta, now);
+renderEnemies(ctx, enemies, spriteImg, spriteMeta, now);
+renderBullets(ctx, bullets);
+renderHUD(ctx);
 
       requestAnimationFrame(loop);
     }
