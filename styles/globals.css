@@ -1,0 +1,21 @@
+/* Make the canvas fill the viewport without scrollbars */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* no scrollbars */
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100dvh; /* ✅ dynamic viewport height for mobile */
+  margin: 0;
+  padding: 0;
+}
