@@ -3,13 +3,7 @@ import React, { useEffect, useRef } from 'react';
 
 import { useInput } from '../lib/inputManager';
 import { updateBullets } from '../lib/bulletManager';
-// before:
-// import { updateBullets, renderBullets } from '../lib/bulletManager';
-
-// after:
-
 import { renderBullets } from '../lib/render';
-
 import { handleCollisions } from '../lib/collision';
 import {
   renderBackground,
@@ -31,25 +25,17 @@ type Props = { selectedFile: string };
 export default function GameCanvas({ selectedFile }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // player state as ref to avoid React re-renders every frame
+  // Player state (kept in a ref so we don't re-render React every frame)
   const playerRef = useRef({ x: 0, y: 0, speed: 300 });
 
-  // input hook at top (valid React hook usage). It reads player x via the ref.
+  // Input hook reads player x via this getter
   const getInput = useInput(canvasRef, () => playerRef.current.x);
 
   useEffect(() => {
     const c = canvasRef.current!;
     const ctx = c.getContext('2d')!;
 
-    function resize() {
-      c.width = c.clientWidth * devicePixelRatio;
-      c.height = c.clientHeight * devicePixelRatio;
-      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    // --- LOAD SPRITES ---
+    // --------- LOAD ASSETS ---------
     let spriteImg: HTMLImageElement | null = null;
     let spriteMeta: any = null;
     loadSprite().then(({ img, meta }) => {
@@ -57,53 +43,73 @@ export default function GameCanvas({ selectedFile }: Props) {
       spriteMeta = meta;
     });
 
-    // --- LOAD PLAYER FORMATIONS ---
     let insectSpec: any = null;
     let formationIndex = 0;
     let playerFormation: PlayerShip[] = [];
+
+    // Will be called after insectSpec loads and on resize
+    const rebuildFormation = () => {
+      if (!insectSpec) return;
+      playerFormation = buildFormation(
+        insectSpec.formations[formationIndex],
+        c.clientWidth,
+        c.clientHeight
+      );
+    };
+
     loadInsectFormations().then((spec) => {
       insectSpec = spec;
       if (spec.formations.length > 0) {
-        playerFormation = buildFormation(
-          spec.formations[0],
-          c.clientWidth,
-          c.clientHeight
-        );
+        rebuildFormation();
       } else {
         // fallback single ship
         playerFormation = [{ x: c.clientWidth / 2, y: c.clientHeight - 100 }];
       }
     });
 
-    // --- LOAD ENEMIES ---
     let enemySpec: any = null;
     if (selectedFile) loadEnemyFormation(selectedFile).then((spec) => (enemySpec = spec));
 
-    // --- GAME STATE ---
-    playerRef.current.x = c.clientWidth / 2;
-    playerRef.current.y = c.clientHeight - 100;
+    // --------- CANVAS RESIZE TO SCREEN ---------
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      const { clientWidth, clientHeight } = c;
 
+      // Make internal resolution match the CSS size * DPR
+      c.width = Math.max(1, Math.floor(clientWidth * dpr));
+      c.height = Math.max(1, Math.floor(clientHeight * dpr));
+
+      // Normalize drawing units to CSS pixels
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Reposition player near bottom center on resize
+      playerRef.current.x = clientWidth / 2;
+      playerRef.current.y = clientHeight - 100;
+
+      // Rebuild formation for the new canvas size
+      rebuildFormation();
+    }
+
+    // Initial size + listener
+    resize();
+    window.addEventListener('resize', resize);
+
+    // --------- GAME STATE ---------
     const bullets: Bullet[] = [];
     const enemies: Enemy[] = [];
     let spawnIndex = 0;
     const startTime = performance.now();
 
-    // --- FORMATION SWAP ---
-    const swapKey = (e: KeyboardEvent) => {
+    // Swap formation with 'F'
+    const onKeyDown = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'f' && insectSpec) {
         formationIndex = (formationIndex + 1) % insectSpec.formations.length;
-        playerFormation = buildFormation(
-          insectSpec.formations[formationIndex],
-          c.clientWidth,
-          c.clientHeight
-        );
+        rebuildFormation();
       }
     };
-    window.addEventListener('keydown', swapKey);
+    window.addEventListener('keydown', onKeyDown);
 
-    // --- LOOP (FPS-capped) ---
-    const trailHistory: { x: number; y: number }[] = [];
-    const MAX_HISTORY = 200;
+    // --------- MAIN LOOP (FPS-capped) ---------
     const FPS = 30;
     let lastRAF = 0;
     let last = performance.now();
@@ -118,19 +124,17 @@ export default function GameCanvas({ selectedFile }: Props) {
 
       const dt = (now - last) / 1000;
       last = now;
-      const cw = c.clientWidth, ch = c.clientHeight;
+
+      const cw = c.clientWidth;
+      const ch = c.clientHeight;
 
       // INPUT
       const { move, fire } = getInput();
       const p = playerRef.current;
       p.x = Math.max(20, Math.min(cw - 20, p.x + move * p.speed * dt));
 
-      // trail history
-      trailHistory.unshift({ x: p.x, y: p.y });
-      if (trailHistory.length > MAX_HISTORY) trailHistory.pop();
-
-      // FORMATION
-      updateFormation(playerFormation, p, trailHistory, now);
+      // FORMATION UPDATE (uses current canvas size)
+      updateFormation(playerFormation, p, [], now);
 
       // FIRING
       if (fire) {
@@ -149,8 +153,9 @@ export default function GameCanvas({ selectedFile }: Props) {
       // COLLISIONS
       handleCollisions(bullets, enemies, playerFormation);
 
-      // RENDER
+      // RENDER (background uses actual screen size)
       renderBackground(ctx, cw, ch);
+
       if (spriteImg && spriteMeta) {
         renderPlayerFormation(ctx, playerFormation, p, spriteImg, spriteMeta, now);
         renderEnemies(ctx, enemies, spriteImg, spriteMeta, now);
@@ -159,33 +164,28 @@ export default function GameCanvas({ selectedFile }: Props) {
         renderPlayerFormation(ctx, playerFormation, p, null as any, null as any, now);
         renderEnemies(ctx, enemies, null as any, null as any, now);
       }
+
       renderBullets(ctx, bullets);
       renderHUD(ctx);
 
-      // DEBUG TEXT
-      ctx.fillStyle = 'lime';
-      ctx.font = '12px monospace';
-      ctx.fillText(
-        `img:${!!spriteImg} frames:${spriteMeta?.frames ?? 0} cols:${spriteMeta?.cols ?? 0} rows:${spriteMeta?.rows ?? 0} formation:${playerFormation.length}`,
-        10, 40
-      );
-
       requestAnimationFrame(loop);
     }
+
     requestAnimationFrame(loop);
 
+    // Cleanup
     return () => {
       window.removeEventListener('resize', resize);
-      window.removeEventListener('keydown', swapKey);
+      window.removeEventListener('keydown', onKeyDown);
     };
-  }, [selectedFile]); // intentionally NOT depending on getInput (stable via ref)
+  }, [selectedFile]);
 
   return (
     <canvas
       ref={canvasRef}
       style={{
-        width: '100%',
-        height: '100%',
+        width: '100vw',   // fill the screen width
+        height: '100dvh', // fill the visible screen height (mobile-safe)
         display: 'block',
         touchAction: 'none',
       }}
