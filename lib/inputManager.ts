@@ -19,19 +19,19 @@ export function useInput(
     let move = 0;
     let fire = false;
 
-    // --- Virtual buttons
+    // Virtual buttons
     if (touch.current.leftHeld) move -= 1;
     if (touch.current.rightHeld) move += 1;
     if (touch.current.fireHeld) fire = true;
 
-    // --- Touch gestures
+    // Touch gestures
     if (touch.current.touchX !== null) {
       const dx = touch.current.touchX - getPlayerX();
       if (Math.abs(dx) > 5) move = dx > 0 ? 1 : -1;
       fire = touch.current.firing || fire;
     }
 
-    // --- Keyboard fallback (desktop)
+    // Keyboard (desktop)
     if (!('ontouchstart' in window)) {
       const left = keys.current['arrowleft'] || keys.current['a'];
       const right = keys.current['arrowright'] || keys.current['d'];

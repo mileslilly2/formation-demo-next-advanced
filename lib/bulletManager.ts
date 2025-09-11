@@ -24,3 +24,4 @@ export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) 
     }
   }
 }
+  

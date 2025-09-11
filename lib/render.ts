@@ -6,7 +6,7 @@ export function renderBackground(ctx: CanvasRenderingContext2D, cw: number, ch: 
   ctx.fillRect(0, 0, cw, ch);
 }
 
-// --- Ship Sprite Drawing (uses cols, rows, frames, frame_duration_ms) ---
+// --- Ship Sprite Drawing (supports frames, cols, rows, frame_duration_ms) ---
 export function drawShipSprite(
   ctx: CanvasRenderingContext2D,
   spriteImg: HTMLImageElement,
@@ -30,24 +30,20 @@ export function drawShipSprite(
     frame_duration_ms = 120,
   } = spriteMeta;
 
-  // 1️⃣ Pick frame based on elapsed time
   const frameIndex = Math.floor(now / frame_duration_ms) % frames;
-
-  // 2️⃣ Convert frame index to sprite sheet coordinates
   const col = frameIndex % cols;
   const row = Math.floor(frameIndex / cols);
 
-  // 3️⃣ Draw correct slice of sprite sheet at (x,y)
   ctx.drawImage(
     spriteImg,
-    col * frame_width,     // sx
-    row * frame_height,    // sy
-    frame_width,           // sw
-    frame_height,          // sh
-    x - frame_width / 2,   // dx
-    y - frame_height / 2,  // dy
-    frame_width,           // dw
-    frame_height           // dh
+    col * frame_width,
+    row * frame_height,
+    frame_width,
+    frame_height,
+    x - frame_width / 2,
+    y - frame_height / 2,
+    frame_width,
+    frame_height
   );
 }
 
@@ -62,10 +58,9 @@ export function renderPlayerFormation(
 ) {
   if (formation.length > 0) {
     for (const ship of formation) {
-      if (spriteImg && spriteMeta) {
+      if (spriteImg && spriteMeta?.frame_width && spriteMeta?.frame_height) {
         drawShipSprite(ctx, spriteImg, spriteMeta, ship.x, ship.y, now);
       } else {
-        // fallback circle
         ctx.fillStyle = '#6cf';
         ctx.beginPath();
         ctx.arc(ship.x, ship.y, 12, 0, Math.PI * 2);
@@ -73,7 +68,6 @@ export function renderPlayerFormation(
       }
     }
   } else {
-    // fallback single player if no formation
     ctx.fillStyle = '#6cf';
     ctx.beginPath();
     ctx.arc(fallbackPlayer.x, fallbackPlayer.y, 14, 0, Math.PI * 2);
@@ -90,10 +84,9 @@ export function renderEnemies(
   now: number = 0
 ) {
   for (const e of enemies) {
-    if (spriteImg && spriteMeta) {
+    if (spriteImg && spriteMeta?.frame_width && spriteMeta?.frame_height) {
       drawShipSprite(ctx, spriteImg, spriteMeta, e.x, e.y, now);
     } else {
-      // fallback circle
       ctx.fillStyle = '#f66';
       ctx.beginPath();
       ctx.arc(e.x, e.y, 14, 0, Math.PI * 2);
@@ -101,7 +94,7 @@ export function renderEnemies(
     }
   }
 }
-
+/*
 // --- Bullets ---
 export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) {
   for (const b of bullets) {
@@ -111,6 +104,7 @@ export function renderBullets(ctx: CanvasRenderingContext2D, bullets: Bullet[]) 
     ctx.fill();
   }
 }
+*/
 
 // --- HUD ---
 export function renderHUD(ctx: CanvasRenderingContext2D) {

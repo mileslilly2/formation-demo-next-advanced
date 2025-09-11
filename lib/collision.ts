@@ -16,7 +16,7 @@ export function handleCollisions(bullets: Bullet[], enemies: any[], playerShips:
     }
   }
 
-  // enemy bullets vs player
+  // enemy bullets vs player ships
   for (let bi = bullets.length - 1; bi >= 0; bi--) {
     const b = bullets[bi];
     if (b.owner !== 'enemy') continue;
