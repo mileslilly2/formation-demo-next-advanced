@@ -1,0 +1,9 @@
+{
+  "image": "/sprites/insect_shapes_sheet.png",
+  "frame_width": 64,
+  "frame_height": 64,
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "frame_duration_ms": 120
+}

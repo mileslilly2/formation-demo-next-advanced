@@ -1,0 +1,10 @@
+{
+  "spawn": [
+    { "t_ms": 0, "x_norm": 50, "y_norm": 0, "vx_px_s": 0, "vy_px_s": 40, "hp": 2 },
+    { "t_ms": 1000, "x_norm": 30, "y_norm": 0, "vx_px_s": 20, "vy_px_s": 60, "hp": 1 },
+    { "t_ms": 2000, "x_norm": 70, "y_norm": 0, "vx_px_s": -20, "vy_px_s": 60, "hp": 1 },
+    { "t_ms": 3000, "x_norm": 20, "y_norm": 0, "vx_px_s": 40, "vy_px_s": 70, "hp": 2 },
+    { "t_ms": 4000, "x_norm": 80, "y_norm": 0, "vx_px_s": -40, "vy_px_s": 70, "hp": 2 },
+    { "t_ms": 6000, "x_norm": 50, "y_norm": 0, "vx_px_s": 0, "vy_px_s": 100, "hp": 3 }
+  ]
+}

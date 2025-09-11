@@ -1,31 +1,14 @@
-export async function loadFormationsIndex(): Promise<string[]> {
-  try {
-    const r = await fetch('/formations/index.json');
-    if (!r.ok) return [];
-    const arr = await r.json();
-    return Array.isArray(arr) ? arr : [];
-  } catch (e) {
-    return [];
-  }
+export async function loadInsectFormations() {
+  const res = await fetch('/formations/insects.json');
+  return res.ok ? res.json() : { formations: [] };
 }
 
-export async function loadInsects(): Promise<any | null> {
-  try {
-    const r = await fetch('/formations/insects.json');
-    if (!r.ok) return null;
-    return await r.json();
-  } catch (e) {
-    return null;
-  }
-}
-
-export async function loadFormationFile(filename: string): Promise<any | null> {
-  if (!filename) return null;
-  try {
-    const r = await fetch('/formations/' + filename);
-    if (!r.ok) return null;
-    return await r.json();
-  } catch (e) {
-    return null;
-  }
+export function buildFormation(def:any, cw:number, ch:number) {
+  return (def.ships||[]).map((s:any)=>({
+    x:(s.x_norm/100)*cw,
+    y:(s.y_norm/100)*ch,
+    baseOffsetX: ((s.x_norm??50)-50)/100*cw*0.4,
+    baseOffsetY: ((s.y_norm??50)-50)/100*ch*0.4,
+    behavior: def.behavior||'static'
+  }));
 }
