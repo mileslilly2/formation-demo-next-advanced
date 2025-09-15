@@ -1,17 +1,18 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 
 export class BootScene extends Phaser.Scene {
-  constructor() { super('boot'); }
+  constructor() {
+    super('boot');
+  }
 
   preload() {
-    // adjust filenames if your assets are named differently
-    this.load.image('bg', '/sprites/pillars_of_creation.png');
-
-    // if you have an atlas:
-    // this.load.atlas('insects', '/sprites/insect_shapes_sheet.png', '/sprites/insect_shapes_sheet.json');
+    // Load a simple background texture or fallback color
+    this.load.image('bg', '/sprites/bg.png'); // make sure /public/sprites/bg.png exists
+    this.load.atlas('flares', '/sprites/flares.png', '/sprites/flares.json'); // optional
   }
 
   create() {
+    // Immediately go to menu
     this.scene.start('menu');
   }
 }

@@ -1,9 +1,6 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
-import type PhaserType from 'phaser';
-import { BootScene } from '../phaser/scenes/BootScene';
-import { MenuScene } from '../phaser/scenes/MenuScene';
-import { PlayScene } from '../phaser/scenes/PlayScene';
+import type * as PhaserType from 'phaser';
 
 type Props = { selectedFile?: string };
 
@@ -15,7 +12,11 @@ export default function PhaserGame({ selectedFile }: Props) {
     let mounted = true;
 
     (async () => {
-      const Phaser = (await import('phaser')).default;
+      const Phaser = await import('phaser');
+      const { BootScene } = await import('../phaser/scenes/BootScene');
+      const { MenuScene } = await import('../phaser/scenes/MenuScene');
+      const { PlayScene } = await import('../phaser/scenes/PlayScene');
+
       if (!mounted || !rootRef.current) return;
 
       const config: Phaser.Types.Core.GameConfig = {
@@ -26,13 +27,10 @@ export default function PhaserGame({ selectedFile }: Props) {
         backgroundColor: '#061025',
         physics: {
           default: 'arcade',
-          arcade: { gravity: {
-            y: 0,
-            x: 0
-          }, debug: false }
+          arcade: { gravity: { y: 0, x: 0 }, debug: false }
         },
         scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
-        scene: [BootScene, MenuScene, PlayScene]
+        scene: [BootScene, MenuScene, PlayScene],
       };
 
       gameRef.current = new Phaser.Game(config);

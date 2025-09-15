@@ -1,14 +1,27 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 
 export class MenuScene extends Phaser.Scene {
-  constructor() { super('menu'); }
+  private startKey!: Phaser.Input.Keyboard.Key;
+
+  constructor() {
+    super('menu');
+  }
 
   create() {
     const { width, height } = this.scale;
-    this.add.text(width/2, height/2 - 20, 'Formation Demo (Phaser)', { fontSize: '24px', color: '#ffffff' }).setOrigin(0.5);
-    this.add.text(width/2, height/2 + 16, 'Press SPACE or Click to Start', { fontSize: '16px', color: '#aaf' }).setOrigin(0.5);
 
-    this.input.keyboard.once('keydown-SPACE', () => this.scene.start('play'));
-    this.input.once('pointerdown', () => this.scene.start('play'));
+    this.add.text(width / 2, height / 2, 'Press ENTER to Start', {
+      fontFamily: 'Arial',
+      fontSize: '32px',
+      color: '#ffffff',
+    }).setOrigin(0.5);
+
+    this.startKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+  }
+
+  update() {
+    if (Phaser.Input.Keyboard.JustDown(this.startKey)) {
+      this.scene.start('play');
+    }
   }
 }
