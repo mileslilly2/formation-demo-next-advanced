@@ -1,8 +1,6 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
 import type PhaserType from 'phaser';
-
-// Import scenes (they export classes)
 import { BootScene } from '../phaser/scenes/BootScene';
 import { MenuScene } from '../phaser/scenes/MenuScene';
 import { PlayScene } from '../phaser/scenes/PlayScene';
@@ -18,7 +16,6 @@ export default function PhaserGame({ selectedFile }: Props) {
 
     (async () => {
       const Phaser = (await import('phaser')).default;
-
       if (!mounted || !rootRef.current) return;
 
       const config: Phaser.Types.Core.GameConfig = {
@@ -29,19 +26,22 @@ export default function PhaserGame({ selectedFile }: Props) {
         backgroundColor: '#061025',
         physics: {
           default: 'arcade',
-          arcade: {
-            gravity: { y: 0 },
-            debug: false,
-          },
+          arcade: { gravity: {
+            y: 0,
+            x: 0
+          }, debug: false }
         },
-        scale: {
-          mode: Phaser.Scale.RESIZE,
-          autoCenter: Phaser.Scale.CENTER_BOTH,
-        },
-        scene: [BootScene, MenuScene, PlayScene],
+        scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
+        scene: [BootScene, MenuScene, PlayScene]
       };
 
       gameRef.current = new Phaser.Game(config);
+
+      setTimeout(() => {
+        if (rootRef.current) {
+          try { rootRef.current.focus(); } catch {}
+        }
+      }, 50);
     })();
 
     return () => {
@@ -53,12 +53,18 @@ export default function PhaserGame({ selectedFile }: Props) {
     };
   }, []);
 
-  // Forward selectedFile changes into Phaser as an event
   useEffect(() => {
     if (selectedFile && gameRef.current) {
       (gameRef.current as any).events.emit('formation:selected', selectedFile);
     }
   }, [selectedFile]);
 
-  return <div ref={rootRef} style={{ width: '100%', height: '100%' }} />;
+  return (
+    <div
+      ref={rootRef}
+      tabIndex={0}
+      style={{ width: '100%', height: '100%', outline: 'none' }}
+      onClick={() => { if (rootRef.current) rootRef.current.focus(); }}
+    />
+  );
 }

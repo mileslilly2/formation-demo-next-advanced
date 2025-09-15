@@ -6,7 +6,6 @@ type Props = {
   onSelect: (filename: string) => void;
 };
 
-// A simple, resilient HUD: quick-select sample formation(s) or paste one manually.
 export default function HUD({ selected, onSelect }: Props) {
   const [manual, setManual] = useState('');
 
