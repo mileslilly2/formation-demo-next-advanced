@@ -18,7 +18,6 @@ import { setBackground } from '../lib/render';
 
 // inside useEffect, after you have ctx and c
 
-
 type Props = { selectedFile: string };
 
 export default function GameCanvas({ selectedFile }: Props) {

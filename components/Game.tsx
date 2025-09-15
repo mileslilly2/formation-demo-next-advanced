@@ -1,19 +1,20 @@
-// components/Game.tsx
 'use client';
 import React, { useState } from 'react';
 import HUD from './HUD';
-import GameCanvas from './GameCanvas';
+import PhaserGame from './PhaserGame';
 
 export default function Game() {
   const [selectedFormationFile, setSelectedFormationFile] = useState<string>('');
+
   return (
-    <>
-      <HUD selected={selectedFormationFile} onSelect={(f)=>setSelectedFormationFile(f)} />
-      <div style={{padding: 16}}>
-        <div style={{width: '100%', aspectRatio:'16/9', border:'1px solid #223'}}>
-          <GameCanvas selectedFile={selectedFormationFile} />
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <HUD
+        selected={selectedFormationFile}
+        onSelect={(f) => setSelectedFormationFile(f)}
+      />
+      <div style={{ width: '100%', aspectRatio: '16/9', border: '1px solid #223', background: '#061025' }}>
+        <PhaserGame selectedFile={selectedFormationFile} />
       </div>
-    </>
+    </div>
   );
 }
