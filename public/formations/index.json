@@ -1,4 +1,5 @@
-[
+{
+"files": [
   "sine_test.json",
   "bezier_test.json",
   "bulletml_imported.json",
@@ -7,3 +8,4 @@
   "snapgraph_rich.json",
   "test_spawn.json"
 ]
+}

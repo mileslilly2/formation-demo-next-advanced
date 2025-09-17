@@ -1,24 +1,36 @@
-import * as Phaser from "phaser";;
+// phaser/entities/Bullet.ts
+import * as Phaser from "phaser";
 
-export default class Bullet extends Phaser.Physics.Arcade.Image {
-  owner: 'player' | 'enemy';
+export default class Bullet extends Phaser.Physics.Arcade.Sprite {
   damage: number;
+  owner: "player" | "enemy" | string;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, undefined as any);
-    this.owner = 'player';
+  constructor(scene: Phaser.Scene, x: number, y: number, texture = "bullet") {
+    super(scene, x, y, texture);
     this.damage = 1;
+    this.owner = "player";
   }
 
-  init(x: number, y: number, vx: number, vy: number, type: string, owner: 'player' | 'enemy') {
-    this.owner = owner;
-    this.damage = 1;
+  /** Initialize / reset the bullet when reused from the group */
+  init(
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    texture = "bullet",
+    owner: "player" | "enemy" | string = "player"
+  ) {
+    this.setTexture(texture);
     this.setPosition(x, y);
     this.setActive(true).setVisible(true);
-    this.setDisplaySize(10, 16);
     this.setVelocity(vx, vy);
+    this.setDisplaySize(12, 18);
+
+    this.owner = owner;
+    this.damage = 1;
   }
 
+  /** Kill the bullet (disable and hide) */
   kill() {
     this.setActive(false);
     this.setVisible(false);

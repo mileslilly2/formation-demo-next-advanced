@@ -1,40 +1,49 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 type Props = {
-  selected?: string;
-  onSelect: (filename: string) => void;
+  selected: string;
+  onSelect: (file: string) => void;
 };
 
 export default function HUD({ selected, onSelect }: Props) {
-  const [manual, setManual] = useState('');
+  const [files, setFiles] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/formations/index.json', { cache: 'no-cache' });
+        const data = await res.json();
+        if (Array.isArray(data.files)) {
+          setFiles(data.files);
+        }
+      } catch (err) {
+        console.error('Failed to load formations index.json', err);
+      }
+    })();
+  }, []);
 
   return (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 8 }}>
-      <div>
-        <strong>Formation:</strong>
-        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-          <button onClick={() => onSelect('sine_test.json')}>sine_test.json</button>
-          <button onClick={() => onSelect('wave_spiral.json')}>wave_spiral.json</button>
-          <button onClick={() => onSelect('classic_wave.json')}>classic_wave.json</button>
-        </div>
-      </div>
-
-      <div>
-        <label style={{ fontSize: 12 }}>Manual filename (in /public/formations)</label>
-        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-          <input
-            value={manual}
-            onChange={(e) => setManual(e.target.value)}
-            placeholder="e.g. my_formation.json"
-            style={{ padding: 6 }}
-          />
-          <button onClick={() => { if (manual) onSelect(manual); }}>Load</button>
-        </div>
-      </div>
-
-      <div style={{ marginLeft: 'auto', fontSize: 13 }}>
-        Selected: <span style={{ color: '#8fe' }}>{selected || '—'}</span>
+    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+      <strong>Formation:</strong>
+      {files.map((f) => (
+        <button
+          key={f}
+          onClick={() => onSelect(f)}
+          style={{
+            padding: '6px 10px',
+            borderRadius: 6,
+            border: '1px solid #3b4252',
+            background: selected === f ? '#3b82f6' : '#111827',
+            color: selected === f ? '#fff' : '#cdd6f4',
+            cursor: 'pointer'
+          }}
+        >
+          {f}
+        </button>
+      ))}
+      <div style={{ marginLeft: 'auto', opacity: .7 }}>
+        Selected: <code>{selected || '—'}</code>
       </div>
     </div>
   );

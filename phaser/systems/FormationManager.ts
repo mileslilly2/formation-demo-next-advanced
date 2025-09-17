@@ -2,29 +2,35 @@
 import * as Phaser from 'phaser';
 import Enemy from '../entities/Enemy';
 
-/**
- * FormationManager
- *
- * Responsibilities:
- * - load formation index or a specific formation file
- * - spawn a formation (immediately or schedule time-based spawns if entries include `t`)
- * - clear existing spawned formation (stop firing, disable enemies, remove scheduled events/tweens)
- *
- * Usage:
- *   const fm = new FormationManager(scene, enemiesGroup, enemyBulletsGroup);
- *   await fm.loadIndex();                // optional (falls back to cache.json)
- *   fm.cycleNext();                      // spawn next formation
- *   fm.spawnFormation(formationObject); // spawn a JS object directly
- *   fm.destroy();                        // cleanup
- */
-export class FormationManager {
+type SpawnIn = any;
+
+type NormalizedSpawn = {
+  delayMs: number;
+  x?: number;
+  y?: number;
+  x_norm?: number;
+  y_norm?: number;
+  vx?: number;
+  vy?: number;
+  size?: number;
+  hp?: number;
+  behavior?: 'static' | 'follow' | 'line' | 'orbit';
+  path?: {
+    type?: 'bezier' | 'spline';
+    duration_ms?: number;
+    points_norm?: Array<{ x: number; y: number }>;
+  };
+};
+
+export default class FormationManager {
   private scene: Phaser.Scene;
-  private enemiesGroup: Phaser.Physics.Arcade.Group;
-  private enemyBulletsGroup?: Phaser.Physics.Arcade.Group;
-  private formations: any[] = [];
-  private index = 0;
+  private enemies: Phaser.Physics.Arcade.Group;
+  private enemyBullets?: Phaser.Physics.Arcade.Group;
+
+  private indexFiles: string[] = [];
   private activeTimers: Phaser.Time.TimerEvent[] = [];
   private activeTweens: Phaser.Tweens.Tween[] = [];
+  private idx = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -32,163 +38,251 @@ export class FormationManager {
     enemyBulletsGroup?: Phaser.Physics.Arcade.Group
   ) {
     this.scene = scene;
-    this.enemiesGroup = enemiesGroup;
-    this.enemyBulletsGroup = enemyBulletsGroup;
-    // Try to read from cache.json if it was preloaded
-    const cached = (this.scene.cache && (this.scene.cache.json as any).get) ? (this.scene.cache.json.get('formations')?.formations ?? []) : [];
-    if (Array.isArray(cached) && cached.length > 0) {
-      this.formations = cached;
-    }
+    this.enemies = enemiesGroup;
+    this.enemyBullets = enemyBulletsGroup;
   }
 
-  /** Load the formation index from /public/formations/index.json (async) */
-  async loadIndex(path = '/formations/index.json'): Promise<void> {
+  // ---------- Index / cycling ----------
+
+  /** Loads /public/formations/index.json with shape: { "files": ["a.json","b.json",...] } */
+  async loadIndex(url = '/formations/index.json'): Promise<void> {
     try {
-      const res = await fetch(path);
-      if (!res.ok) throw new Error('failed to load formations index: ' + res.status);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`index fetch ${res.status}`);
       const json = await res.json();
-      this.formations = json.formations ?? [];
-    } catch (err) {
-      console.warn('[FormationManager] loadIndex failed:', err);
-      this.formations = this.formations ?? [];
+      this.indexFiles = Array.isArray(json.files) ? json.files : [];
+      this.idx = 0;
+      console.log('[FormationManager] index files:', this.indexFiles);
+    } catch (e) {
+      console.warn('[FormationManager] loadIndex failed:', e);
+      this.indexFiles = [];
     }
   }
 
-  /** Load a single formation file (with spawns array) and schedule it */
+  /** Spawns next file from index (if loaded) */
+  async cycleNext(): Promise<void> {
+    if (!this.indexFiles.length) return;
+    const file = this.indexFiles[this.idx];
+    this.idx = (this.idx + 1) % this.indexFiles.length;
+    await this.loadAndScheduleFromFile(file);
+  }
+
+  // ---------- File loading & normalization ----------
+
+  /** Load a formation file and schedule/emit according to its shape. */
   async loadAndScheduleFromFile(filename: string): Promise<void> {
     const url = `/formations/${filename}`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error('formation fetch failed: ' + res.status);
+    if (!res.ok) throw new Error(`formation fetch failed: ${res.status}`);
     const json = await res.json();
-    if (Array.isArray(json.spawns)) {
-      // schedule spawns (use spawn spec shape {t, x, y, vx, vy, size, hp})
-      this.clearActive();
-      for (const spawn of json.spawns) {
-        const delay = Math.max(0, spawn.t ?? 0);
-        const t = this.scene.time.addEvent({
-          delay,
-          callback: () => this.spawnSpec(spawn),
-        });
-        this.activeTimers.push(t);
-      }
-    } else {
-      console.warn('[FormationManager] file has no spawns array:', filename);
-    }
-  }
 
-  /** Cycle to next formation in the loaded index (spawns immediately) */
-  cycleNext(): void {
-    if (!this.formations || this.formations.length === 0) return;
-    const formation = this.formations[this.index];
-    this.index = (this.index + 1) % this.formations.length;
-    this.clearActive();
-    this.spawnFormationImmediate(formation);
-  }
-
-  /** Spawn a formation object immediately (no scheduling) */
-  spawnFormationImmediate(formation: any): void {
-    if (!formation || !Array.isArray(formation.ships) && !Array.isArray(formation)) return;
-    const ships = Array.isArray(formation.ships) ? formation.ships : (Array.isArray(formation) ? formation : []);
-    const w = this.scene.scale.width;
-    const h = this.scene.scale.height;
-    const cx = w / 2;
-    const cy = h / 4;
-
-    // spawn each ship
-    ships.forEach((ship: any, i: number) => {
-      const x = (ship.x_norm ?? ship.x ?? 50) / 100 * w;
-      const y = (ship.y_norm ?? ship.y ?? 10) / 100 * h;
-      const e = this.enemiesGroup.get(x, y, 'enemy') as Enemy | null;
-      if (!e) return;
-      e.init(Date.now() + i, x, y, ship.vx ?? 0, ship.vy ?? 40, ship.size ?? 40, ship.hp ?? 1);
-      if (this.enemyBulletsGroup && typeof e.startFiring === 'function') {
-        e.startFiring(this.scene, this.enemyBulletsGroup);
-      }
-
-      // attach simple behaviors (tween-based for orbit)
-      const behavior = formation.behavior ?? 'static';
-      if (behavior === 'orbit') {
-        const tween = this.scene.tweens.addCounter({
-          from: 0,
-          to: 360,
-          duration: 6000,
-          repeat: -1,
-          onUpdate: (twn) => {
-            const ang = Phaser.Math.DegToRad((twn.getValue() as number) + i * 30);
-            e.x = cx + Math.cos(ang) * (80 + i * 4);
-            e.y = cy + Math.sin(ang) * (80 + i * 4);
-          },
-        });
-        this.activeTweens.push(tween);
-      } else if (behavior === 'follow') {
-        e.setVelocity(0, ship.vy ?? 40);
-      } else if (behavior === 'line') {
-        e.setVelocity(0, ship.vy ?? 60);
-      } else { // static
-        e.setVelocity(0, 0);
-      }
-    });
-  }
-
-  /** Spawn formation (if formation object uses `spawns` with times, schedule them) */
-  spawnFormation(formationOrArray: any): void {
-    // if it appears to be a pre-scheduled 'spawns' array with times, schedule each spawn
-    if (formationOrArray && Array.isArray(formationOrArray.spawns)) {
-      this.clearActive();
-      for (const spawn of formationOrArray.spawns) {
-        const delay = Math.max(0, spawn.t ?? 0);
-        const t = this.scene.time.addEvent({
-          delay,
-          callback: () => this.spawnSpec(spawn),
-        });
-        this.activeTimers.push(t);
-      }
+    // Normalize to a list of spawns
+    const spawns = this.normalizeToSpawns(json);
+    if (!spawns.length) {
+      console.warn('[FormationManager] no spawns in file:', filename, json);
       return;
     }
-    // otherwise, spawn immediately
-    this.spawnFormationImmediate(formationOrArray);
-  }
 
-  /** spawn a single spawn-spec object {x,y,vx,vy,size,hp} */
-  spawnSpec(spec: any) {
-    const w = this.scene.scale.width;
-    const h = this.scene.scale.height;
-    const x = (typeof spec.x === 'number') ? spec.x : Phaser.Math.Between(32, w - 32);
-    const y = (typeof spec.y === 'number') ? spec.y : (spec.y ?? -40);
-    const e = this.enemiesGroup.get(x, y, 'enemy') as Enemy | null;
-    if (!e) return;
-    e.init(Date.now(), x, y, spec.vx ?? 0, spec.vy ?? 120, spec.size ?? 48, spec.hp ?? 1);
-    if (this.enemyBulletsGroup && typeof e.startFiring === 'function') {
-      e.startFiring(this.scene, this.enemyBulletsGroup);
+    // Clear old and schedule new
+    this.clearActive();
+    for (const s of spawns) {
+      if (s.delayMs > 0) {
+        const t = this.scene.time.addEvent({
+          delay: s.delayMs,
+          callback: () => this.spawnOne(s),
+        });
+        this.activeTimers.push(t);
+      } else {
+        this.spawnOne(s);
+      }
     }
   }
 
-  /** Stop & clear any active timers and tweens, stop firing and kill existing enemies */
+  /** Accepts either {spawn}/ {spawns} / {ships, behavior} / raw arrays. */
+  private normalizeToSpawns(json: any): NormalizedSpawn[] {
+    const w = this.scene.scale.width;
+    const h = this.scene.scale.height;
+
+    // 1) legacy/time-based
+    let raw: SpawnIn[] = [];
+    if (Array.isArray(json?.spawns)) raw = json.spawns;
+    else if (Array.isArray(json?.spawn)) raw = json.spawn;
+    else if (Array.isArray(json)) raw = json;
+
+    if (raw.length) {
+      return raw.map((s: any) => ({
+        delayMs: Math.max(0, s.t ?? s.t_ms ?? s.delay ?? 0),
+        x: typeof s.x === 'number' ? s.x : undefined,
+        y: typeof s.y === 'number' ? s.y : undefined,
+        x_norm: typeof s.x_norm === 'number' ? s.x_norm : undefined,
+        y_norm: typeof s.y_norm === 'number' ? s.y_norm : undefined,
+        vx: s.vx ?? 0,
+        vy: s.vy ?? 40,
+        size: s.size ?? 40,
+        hp: s.hp ?? 1,
+        behavior: s.behavior,
+        path: s.path,
+      }));
+    }
+
+    // 2) modern ships/behavior → immediate spawns (stagger slightly for visibility)
+    if (Array.isArray(json?.ships)) {
+      const behavior = json.behavior ?? 'static';
+      return json.ships.map((ship: any, i: number) => ({
+        delayMs: i * 120,
+        x_norm: typeof ship.x_norm === 'number' ? ship.x_norm : undefined,
+        y_norm: typeof ship.y_norm === 'number' ? ship.y_norm : undefined,
+        x: typeof ship.x === 'number' ? ship.x : undefined,
+        y: typeof ship.y === 'number' ? ship.y : undefined,
+        vx: ship.vx ?? 0,
+        vy: ship.vy ?? 40,
+        size: ship.size ?? 40,
+        hp: ship.hp ?? 1,
+        behavior,
+        path: ship.path,
+      }));
+    }
+
+    // 3) nothing usable
+    return [];
+  }
+
+  // ---------- Spawning / behaviors / paths ----------
+
+  private spawnOne(s: NormalizedSpawn): void {
+    const { width: w, height: h } = this.scene.scale;
+    const x = (typeof s.x === 'number')
+      ? s.x
+      : (typeof s.x_norm === 'number' ? (s.x_norm / 100) * w : Phaser.Math.Between(32, w - 32));
+    const y = (typeof s.y === 'number')
+      ? s.y
+      : (typeof s.y_norm === 'number' ? (s.y_norm / 100) * h : -40);
+
+    let e = this.enemies.get(x, y, 'enemy') as Enemy | null;
+
+    // If pool returned null, create a basic sprite so we ALWAYS see something.
+    if (!e) {
+      e = this.scene.physics.add.sprite(x, y, 'enemy') as unknown as Enemy;
+      this.enemies.add(e);
+    }
+
+    // Initialize enemy (supports your Enemy.init or falls back)
+    if (typeof (e as any).init === 'function') {
+      (e as any).init(Date.now(), x, y, s.vx ?? 0, s.vy ?? 40, s.size ?? 40, s.hp ?? 1);
+    } else {
+      e.setPosition(x, y);
+      e.setVelocity(s.vx ?? 0, s.vy ?? 40);
+      e.setDisplaySize(s.size ?? 40, s.size ?? 40);
+    }
+    e.setActive(true).setVisible(true);
+
+    // bullets from enemies if supported
+    if (this.enemyBullets && typeof (e as any).startFiring === 'function') {
+      try { (e as any).startFiring(this.scene, this.enemyBullets); } catch {}
+    }
+
+    // Behavior
+    switch (s.behavior) {
+      case 'follow': e.setVelocity(0, s.vy ?? 40); break;
+      case 'line':   e.setVelocity(0, s.vy ?? 60); break;
+      case 'orbit':  this.attachOrbit(e); break;
+      default:       e.setVelocity(0, 0); break; // static
+    }
+
+    // Path (bezier/spline)
+    if (s.path && Array.isArray(s.path.points_norm) && s.path.points_norm.length >= 2) {
+      this.attachPath(e, s.path.points_norm, s.path.duration_ms ?? 4000, s.path.type);
+    }
+  }
+
+  private attachOrbit(e: Phaser.GameObjects.Sprite | Phaser.Physics.Arcade.Sprite) {
+    const cx = this.scene.scale.width / 2;
+    const cy = this.scene.scale.height / 4;
+    const radius = 80 + Math.random() * 30;
+    const start = Math.random() * 360;
+
+    const tw = this.scene.tweens.addCounter({
+      from: 0,
+      to: 360,
+      duration: 6000,
+      repeat: -1,
+      onUpdate: (t) => {
+        const a = Phaser.Math.DegToRad(start + (t.getValue() as number));
+        (e as any).x = cx + Math.cos(a) * radius;
+        (e as any).y = cy + Math.sin(a) * radius;
+      }
+    });
+    this.activeTweens.push(tw);
+  }
+
+  private attachPath(
+    e: Phaser.GameObjects.Sprite | Phaser.Physics.Arcade.Sprite,
+    pointsNorm: Array<{ x: number; y: number }>,
+    durationMs: number,
+    type?: 'bezier' | 'spline'
+  ) {
+    const toPx = (p: { x: number; y: number }) => new Phaser.Math.Vector2(
+      (p.x / 100) * this.scene.scale.width,
+      (p.y / 100) * this.scene.scale.height
+    );
+
+    const pts = pointsNorm.map(toPx);
+
+    let getPoint: (t: number) => Phaser.Math.Vector2;
+
+    if (type === 'bezier' && pts.length === 4) {
+      const curve = new Phaser.Curves.CubicBezier(pts[0], pts[1], pts[2], pts[3]);
+      getPoint = (t) => curve.getPoint(t);
+    } else {
+      // generic spline for 2+ points
+      const spline = new Phaser.Curves.Spline(pts.map(p => p.clone()));
+      getPoint = (t) => spline.getPoint(t);
+    }
+
+    const tw = this.scene.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: durationMs,
+      onUpdate: (t) => {
+        const v = getPoint(t.getValue() as number);
+        (e as any).setPosition(v.x, v.y);
+      }
+    });
+    this.activeTweens.push(tw);
+  }
+
+  // ---------- Public immediate spawn API ----------
+
+  /** Spawn a formation object immediately (supports {ships,behavior}, raw arrays, or {spawn(s)} without times). */
+  spawnFormationImmediate(formation: any): void {
+    const spawns = this.normalizeToSpawns(formation)
+      .map(s => ({ ...s, delayMs: 0 })); // immediate
+
+    if (!spawns.length) return;
+    this.clearActive();
+    spawns.forEach(s => this.spawnOne(s));
+  }
+
+  // ---------- Cleanup ----------
+
   clearActive(): void {
-    // stop timers
-    this.activeTimers.forEach((t) => t.remove(false));
+    this.activeTimers.forEach(t => t.remove(false));
+    this.activeTweens.forEach(tw => tw.stop());
     this.activeTimers = [];
-
-    // stop tweens
-    this.activeTweens.forEach((tw) => tw.stop());
     this.activeTweens = [];
-
-    // stop enemies and their firing
-    this.enemiesGroup.getChildren().forEach((obj) => {
-      const e = obj as Enemy;
+    // stop & hide enemies
+    this.enemies.getChildren().forEach(obj => {
+      const e = obj as any;
       if (e && e.active) {
         if (typeof e.stopFiring === 'function') e.stopFiring();
         if (typeof e.kill === 'function') e.kill();
-        else e.disableBody(true, true);
+        else e.disableBody?.(true, true);
       }
     });
   }
 
-  /** destroy manager and free resources */
   destroy(): void {
     this.clearActive();
-    this.formations = [];
+    this.indexFiles = [];
   }
 }
-
-export default FormationManager;

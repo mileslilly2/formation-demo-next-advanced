@@ -1,5 +1,6 @@
-import * as Phaser from "phaser";;
-import Bullet from './Bullet';
+// phaser/entities/Enemy.ts
+import * as Phaser from "phaser";
+import Bullet from "./Bullet";
 
 let nextEnemyId = 1;
 
@@ -9,12 +10,22 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   fireTimer?: Phaser.Time.TimerEvent;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, undefined as any);
+    // ✅ give a texture key so Phaser can render the sprite
+    super(scene, x, y, "enemy");
+
     this.id = nextEnemyId++;
     this.hp = 1;
   }
 
-  init(id: number, x: number, y: number, vx: number, vy: number, size: number, hp: number) {
+  init(
+    id: number,
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    size: number,
+    hp: number
+  ) {
     this.id = id;
     this.hp = hp;
     this.setPosition(x, y);
@@ -32,9 +43,11 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       loop: true,
       callback: () => {
         if (!this.active) return;
-        const b = bulletGroup.get(this.x, this.y + 20) as Bullet;
+        // ✅ use "bullet" texture (or "enemy_bullet" if you’ve got one loaded in preload)
+        const b = bulletGroup.get(this.x, this.y + 20, "bullet") as Bullet;
         if (!b) return;
-        b.init(this.x, this.y + 20, 0, 200, 'enemy_basic', 'enemy');
+        // ✅ pass the texture key & owner properly
+        b.init(this.x, this.y + 20, 0, 200, "bullet", "enemy");
       },
     });
   }

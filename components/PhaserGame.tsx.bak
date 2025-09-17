@@ -1,27 +1,26 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
-import type PhaserType from 'phaser';
+import type { Game } from 'phaser';
 
 type Props = { selectedFile?: string };
 
 export default function PhaserGame({ selectedFile }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const gameRef = useRef<PhaserType.Game | null>(null);
+  const gameRef = useRef<Game | null>(null);
 
-  // Create Phaser game once
   useEffect(() => {
     let mounted = true;
-
     (async () => {
       try {
-        const Phaser = (await import('phaser')).default;
+        console.log('[PhaserGame] useEffect start');
+        const Phaser = await import('phaser');
         const { BootScene } = await import('../phaser/scenes/BootScene');
         const { MenuScene } = await import('../phaser/scenes/MenuScene');
         const { PlayScene } = await import('../phaser/scenes/PlayScene');
 
         if (!mounted || !rootRef.current) return;
 
-        const config: PhaserType.Types.Core.GameConfig = {
+        const config: Phaser.Types.Core.GameConfig = {
           type: Phaser.AUTO,
           parent: rootRef.current,
           width: rootRef.current.clientWidth || 800,
@@ -34,7 +33,7 @@ export default function PhaserGame({ selectedFile }: Props) {
 
         gameRef.current = new Phaser.Game(config);
         (window as any).__PHASER_GAME__ = gameRef.current;
-        console.log('[PhaserGame] created', !!gameRef.current);
+        console.log('[PhaserGame] created gameRef', !!gameRef.current);
       } catch (err) {
         console.error('[PhaserGame] init error', err);
       }
@@ -43,20 +42,16 @@ export default function PhaserGame({ selectedFile }: Props) {
     return () => {
       mounted = false;
       if (gameRef.current) {
-        try { gameRef.current.destroy(true); } catch {}
+        try { gameRef.current.destroy(true); } catch (err) { console.warn('destroy err', err); }
         gameRef.current = null;
       }
     };
   }, []);
 
-  // When HUD selects a file, tell Phaser
   useEffect(() => {
     if (selectedFile && gameRef.current) {
-      try {
-        (gameRef.current as any).events.emit('formation:selected', selectedFile);
-      } catch (err) {
-        console.warn('emit formation:selected failed', err);
-      }
+      try { (gameRef.current as any).events.emit('formation:selected', selectedFile); }
+      catch (err) { console.warn('emit formation:selected failed', err); }
     }
   }, [selectedFile]);
 
