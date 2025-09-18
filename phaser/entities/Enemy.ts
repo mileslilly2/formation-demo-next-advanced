@@ -1,6 +1,6 @@
 // phaser/entities/Enemy.ts
-import * as Phaser from "phaser";
-import Bullet from "./Bullet";
+import * as Phaser from 'phaser';
+import Bullet from './Bullet';
 
 let nextEnemyId = 1;
 
@@ -10,13 +10,21 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   fireTimer?: Phaser.Time.TimerEvent;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    // ✅ give a texture key so Phaser can render the sprite
-    super(scene, x, y, "enemy");
+    super(scene, x, y, 'enemy');
+
+    // attach to scene + physics
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
 
     this.id = nextEnemyId++;
     this.hp = 1;
+
+    this.setDisplaySize(40, 40);
+    this.setActive(false);
+    this.setVisible(false);
   }
 
+  /** initialize/reuse enemy */
   init(
     id: number,
     x: number,
@@ -28,13 +36,19 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   ) {
     this.id = id;
     this.hp = hp;
+
     this.setPosition(x, y);
-    this.setActive(true).setVisible(true);
-    this.setDisplaySize(size, size);
     this.setVelocity(vx, vy);
+
+    this.setDisplaySize(size, size);
     this.setCircle(size * 0.4);
+
+    this.setActive(true);
+    this.setVisible(true);
+    this.body.enable = true;
   }
 
+  /** enemy autofire */
   startFiring(scene: Phaser.Scene, bulletGroup: Phaser.Physics.Arcade.Group) {
     if (this.fireTimer) this.fireTimer.remove();
 
@@ -43,11 +57,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       loop: true,
       callback: () => {
         if (!this.active) return;
-        // ✅ use "bullet" texture (or "enemy_bullet" if you’ve got one loaded in preload)
-        const b = bulletGroup.get(this.x, this.y + 20, "bullet") as Bullet;
+
+        const b = bulletGroup.get(this.x, this.y + 20) as Bullet;
         if (!b) return;
-        // ✅ pass the texture key & owner properly
-        b.init(this.x, this.y + 20, 0, 200, "bullet", "enemy");
+
+        // always init with owner + damage
+        b.init(this.x, this.y + 20, 0, 200, 'bullet', 'enemy', 1);
       },
     });
   }
@@ -59,7 +74,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  receiveDamage(amount: number): boolean {
+  /** handle taking damage */
+  takeDamage(amount: number): boolean {
     this.hp -= amount;
     if (this.hp <= 0) {
       this.kill();
@@ -68,6 +84,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     return false;
   }
 
+  /** deactivate + recycle enemy */
   kill() {
     this.stopFiring();
     this.setActive(false);

@@ -1,72 +1,45 @@
-'use client';
-import React, { useEffect, useRef } from 'react';
-import type PhaserType from 'phaser';
+"use client";
 
-type Props = { selectedFile?: string };
+import { useEffect, useRef } from "react";
+import * as Phaser from "phaser";
 
-export default function PhaserGame({ selectedFile }: Props) {
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const gameRef = useRef<PhaserType.Game | null>(null);
+import PlayScene from "../phaser/scenes/PlayScene";
 
-  // Create Phaser game once
+
+
+export default function PhaserGame() {
+  const gameRef = useRef<Phaser.Game | null>(null);
+
   useEffect(() => {
-    let mounted = true;
+    if (!gameRef.current) {
+      const config: Phaser.Types.Core.GameConfig = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        physics: { default: "arcade" },
+        scene: [PlayScene],   // 👈 now using your real scene
+        parent: "phaser-container",
+      };
 
-    (async () => {
-      try {
-        const Phaser = (await import('phaser')).default;
-        const { BootScene } = await import('../phaser/scenes/BootScene');
-        const { MenuScene } = await import('../phaser/scenes/MenuScene');
-        const { PlayScene } = await import('../phaser/scenes/PlayScene');
-
-        if (!mounted || !rootRef.current) return;
-
-        const config: PhaserType.Types.Core.GameConfig = {
-          type: Phaser.AUTO,
-          parent: rootRef.current,
-          width: rootRef.current.clientWidth || 800,
-          height: rootRef.current.clientHeight || 600,
-          backgroundColor: '#061025',
-          physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
-          scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
-          scene: [BootScene, MenuScene, PlayScene],
-        };
-
-        gameRef.current = new Phaser.Game(config);
-        (window as any).__PHASER_GAME__ = gameRef.current;
-        console.log('[PhaserGame] created', !!gameRef.current);
-      } catch (err) {
-        console.error('[PhaserGame] init error', err);
-      }
-    })();
+      gameRef.current = new Phaser.Game(config);
+    }
 
     return () => {
-      mounted = false;
-      if (gameRef.current) {
-        try { gameRef.current.destroy(true); } catch {}
-        gameRef.current = null;
-      }
+      // clean up on unmount
+      gameRef.current?.destroy(true);
+      gameRef.current = null;
     };
   }, []);
 
-  // When HUD selects a file, tell Phaser
-  useEffect(() => {
-    if (selectedFile && gameRef.current) {
-      try {
-        (gameRef.current as any).events.emit('formation:selected', selectedFile);
-      } catch (err) {
-        console.warn('emit formation:selected failed', err);
-      }
-    }
-  }, [selectedFile]);
-
   return (
     <div
-      id="game-container"
-      ref={rootRef}
-      tabIndex={0}
-      style={{ width: '100%', height: '100%', outline: 'none' }}
-      onClick={() => { if (rootRef.current) rootRef.current.focus(); }}
+      id="phaser-container"
+      style={{
+        width: "800px",
+        height: "600px",
+        margin: "0 auto",
+        border: "2px solid #444",
+      }}
     />
   );
 }
