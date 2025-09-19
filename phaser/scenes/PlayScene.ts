@@ -30,6 +30,35 @@ export default class PlayScene extends Phaser.Scene {
     this.load.image("player", "/sprites/player.png");
     this.load.image("bullet", "/sprites/bullet.png");
     this.load.image("enemy", "/sprites/enemy.png");
+    this.load.once('complete', async () => {
+  try {
+    const texKeys = (this.textures as any).getTextureKeys?.() || [];
+    console.log('[ASSET][textures]', texKeys);
+    console.log('[ASSET][json]', this.cache.json.getKeys?.() || []);
+    console.log('[ASSET][audio]', this.cache.audio?.getKeys?.() || []);
+
+    // HEAD-check a few critical assets
+    const checkList: Array<[string, string]> = [
+      ['bg', '/sprites/bg.png'],
+      ['player', '/sprites/player.png'],
+      ['enemy', '/sprites/enemy.png'],
+      ['bullet', '/sprites/bullet.png'],
+    ];
+
+      for (const [key, url] of checkList) {
+        try {
+          const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+          if (!res.ok) throw new Error(String(res.status));
+          console.log(`[ASSET OK] ${key} -> ${new URL(url, location.origin).href}`);
+        } catch (e) {
+          console.error(`[ASSET MISS] ${key} -> ${url}`, e);
+        }
+      }
+    } catch (e) {
+    console.error('[ASSET] sanity logger error', e);
+  }
+});
+
   }
 
   create() {
