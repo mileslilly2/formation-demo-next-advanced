@@ -25,14 +25,19 @@ export default class AllyManager {
     formation.ships.forEach((ship: any) => {
       const ally = this.scene.physics.add.sprite(this.player.x, this.player.y, 'player');
       ally.setDisplaySize(32, 32).setTint(0x00ffcc);
+     
       this.allies.push({
         sprite: ally,
-        offset: new Phaser.Math.Vector2(ship.x_norm ?? 0, ship.y_norm ?? 0),
+        offset: new Phaser.Math.Vector2(
+        (ship.x_norm - 50) / 100 * this.scene.scale.width,
+        (ship.y_norm - 50) / 100 * this.scene.scale.height
+      ),
+
         behavior: formation.behavior ?? 'follow',
       });
     });
   }
-
+// tacos
   update() {
     this.allies.forEach((entry) => {
       entry.sprite.x = this.player.x + entry.offset.x;
