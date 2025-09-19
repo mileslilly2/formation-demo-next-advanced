@@ -3,6 +3,9 @@ import Player from "../entities/Player";
 import Bullet from "../entities/Bullet";
 import Enemy from "../entities/Enemy";
 import FormationManager from "../systems/FormationManager";
+import { logFlags } from '../../src/flags';
+
+
 
 export default class PlayScene extends Phaser.Scene {
   private bg!: Phaser.GameObjects.TileSprite;
@@ -62,6 +65,7 @@ export default class PlayScene extends Phaser.Scene {
   }
 
   create() {
+    logFlags
     console.log(">>> CREATE running");
 
     const { width, height } = this.scale;
