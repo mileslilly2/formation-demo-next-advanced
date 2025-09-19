@@ -49,3 +49,17 @@ npm run dev
 - `public/formations/*.json` – samples: `sine_test`, `bezier_test`, `bulletml_imported`, plus earlier rich sets
 - `public/formations/index.json` – list of formation files displayed in the UI
 - `app/page.jsx` – renderer + simple game loop with path support
+
+
+
+# Formation Demo — Phaser migration
+
+This repo was refactored to use **Phaser (v3)** for the game loop, physics, collisions and scene management.
+Below are the quick steps to run locally and the verification checklist.
+
+## Install
+```bash
+# install new dependency
+npm install phaser@^3.90.0
+# or
+yarn add phaser@^3.90.0
