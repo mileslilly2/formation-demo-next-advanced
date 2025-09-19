@@ -26,7 +26,7 @@ export default class AllyManager {
       const ally = this.scene.physics.add.sprite(this.player.x, this.player.y, 'player');
       ally.setDisplaySize(32, 32).setTint(0x00ffcc);
       this.allies.push({
-        sprite: ally,git 
+        sprite: ally,
         offset: new Phaser.Math.Vector2(
         (ship.x_norm - 50) / 100 * this.scene.scale.width,
         (ship.y_norm - 50) / 100 * this.scene.scale.height
