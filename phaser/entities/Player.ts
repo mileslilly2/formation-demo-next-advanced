@@ -1,6 +1,6 @@
 // phaser/entities/Player.ts
-import * as Phaser from 'phaser';
-import Bullet from './Bullet';
+import * as Phaser from "phaser";
+import Bullet from "./Bullet";
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
   private maxHp: number;
@@ -12,7 +12,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   private hpText!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'player');
+    super(scene, x, y, "player");
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
@@ -26,14 +26,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     // HUD
     this.hpBarGraphics = scene.add.graphics().setDepth(1000);
-    this.hpText = scene.add.text(12, 36, '', { color: '#fff', fontSize: '14px' }).setDepth(1000);
+    this.hpText = scene.add
+      .text(12, 36, "", { color: "#fff", fontSize: "14px" })
+      .setDepth(1000);
     this.updateHpHud();
   }
 
   public fire(bulletGroup: Phaser.Physics.Arcade.Group) {
-    const b = bulletGroup.get(this.x, this.y - 20, 'bullet') as Bullet;
+    const b = bulletGroup.get(this.x, this.y - 20) as Bullet; // no texture key here
     if (!b) return;
-    b.init(this.x, this.y - 20, 0, -400, 'bullet', 'player');
+    b.init(this.x, this.y - 20, 0, -400, "bullet", "player");
   }
 
   public takeDamage(amount: number) {
@@ -73,8 +75,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   private updateHpHud() {
-    const x = 12, y = 56;
-    const w = 180, h = 12;
+    const x = 12,
+      y = 56;
+    const w = 180,
+      h = 12;
     const pct = Phaser.Math.Clamp(this.hp / this.maxHp, 0, 1);
     this.hpBarGraphics.clear();
 
@@ -100,7 +104,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (emitter) emitter.explode(24, this.x, this.y);
 
     this.scene.time.delayedCall(600, () => {
-      this.scene.scene.start('menu');
+      this.scene.events.emit("game-over"); // let PlayScene handle transition
     });
   }
 }

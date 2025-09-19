@@ -1,0 +1,26 @@
+{
+  "level_id": "level_1",
+  "meta": {
+    "difficulty": "easy",
+    "background": "nebula.png",
+    "music": "stage1_theme.mp3"
+  },
+  "waves": [
+    {
+      "formation_file": "test_spawn.json",
+      "start_time_ms": 0,
+      "repeat": 1
+    },
+    {
+      "formation_file": "bezier_test.json",
+      "start_time_ms": 10000,
+      "repeat": 2,
+      "interval_ms": 5000
+    },
+    {
+      "formation_file": "birdflock_rich.json",
+      "start_time_ms": 30000,
+      "repeat": 1
+    }
+  ]
+}

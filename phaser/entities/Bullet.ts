@@ -1,12 +1,12 @@
 // phaser/entities/Bullet.ts
-import * as Phaser from 'phaser';
+import * as Phaser from "phaser";
 
 export default class Bullet extends Phaser.Physics.Arcade.Sprite {
-  owner: 'player' | 'enemy';
+  owner: "player" | "enemy";
   damage: number;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'bullet');
+    super(scene, x, y, "bullet");
 
     // enable physics
     scene.add.existing(this);
@@ -16,7 +16,7 @@ export default class Bullet extends Phaser.Physics.Arcade.Sprite {
     this.setActive(false);
     this.setVisible(false);
 
-    this.owner = 'player';
+    this.owner = "player";
     this.damage = 1;
   }
 
@@ -27,14 +27,16 @@ export default class Bullet extends Phaser.Physics.Arcade.Sprite {
     vx: number,
     vy: number,
     texture: string,
-    owner: 'player' | 'enemy',
+    owner: "player" | "enemy",
     damage = 1
   ) {
-    this.setTexture(texture || 'bullet');
+    this.setTexture(texture || "bullet");
     this.setPosition(x, y);
     this.setVelocity(vx, vy);
+
     this.setActive(true);
     this.setVisible(true);
+    this.body.enable = true; // <-- re-enable physics
 
     this.owner = owner;
     this.damage = damage;
@@ -42,9 +44,10 @@ export default class Bullet extends Phaser.Physics.Arcade.Sprite {
 
   /** mark bullet as inactive + recycle */
   kill() {
+    this.setVelocity(0, 0);
     this.setActive(false);
     this.setVisible(false);
     this.body.stop();
-    this.body.enable = false;
+    this.body.enable = false; // disable until reused
   }
 }

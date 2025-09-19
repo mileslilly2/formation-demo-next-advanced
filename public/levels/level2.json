@@ -1,0 +1,33 @@
+{
+  "level_id": "level_2",
+  "meta": {
+    "difficulty": "medium",
+    "background": "asteroid_field.png",
+    "music": "stage2_theme.mp3"
+  },
+  "waves": [
+    {
+      "formation_file": "test_spawn.json",
+      "start_time_ms": 0,
+      "repeat": 2,
+      "interval_ms": 4000
+    },
+    {
+      "formation_file": "bezier_test.json",
+      "start_time_ms": 8000,
+      "repeat": 3,
+      "interval_ms": 4000
+    },
+    {
+      "formation_file": "snapgraph_rich.json",
+      "start_time_ms": 22000,
+      "repeat": 1
+    },
+    {
+      "formation_file": "bulletml_rich.json",
+      "start_time_ms": 30000,
+      "repeat": 2,
+      "interval_ms": 6000
+    }
+  ]
+}
