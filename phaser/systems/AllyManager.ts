@@ -25,6 +25,7 @@ export default class AllyManager {
     formation.ships.forEach((ship: any) => {
       const ally = this.scene.physics.add.sprite(this.player.x, this.player.y, 'player');
       ally.setDisplaySize(32, 32).setTint(0x00ffcc);
+     
       this.allies.push({
         sprite: ally,
         offset: new Phaser.Math.Vector2(
@@ -36,7 +37,7 @@ export default class AllyManager {
       });
     });
   }
-
+// tacos
   update() {
     this.allies.forEach((entry) => {
       entry.sprite.x = this.player.x + entry.offset.x;
