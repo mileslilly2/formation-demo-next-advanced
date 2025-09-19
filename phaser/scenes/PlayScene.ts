@@ -8,7 +8,6 @@ import AllyManager from "../systems/AllyManager";
 import { logFlags } from '../../src/flags';
 
 export default class PlayScene extends Phaser.Scene {
-  // instance fields
   private allyManager!: AllyManager;
   private bg!: Phaser.GameObjects.TileSprite;
   private player!: Player;
@@ -23,12 +22,13 @@ export default class PlayScene extends Phaser.Scene {
   private scoreText!: Phaser.GameObjects.Text;
 
   private formationFiles: string[] = [];
-  private currentFormationIndex: number = 0; // used by auto scheduler
+  private currentFormationIndex: number = 0;
 
-  // manual index which file the F-key will operate on (separate from auto scheduler)
-  private manualFileIndex: number = 0;
+  // ally loader state
+  private allyFormations: any[] = [];
+  private allyFormationIndex: number = 0;
 
-  // caching and per-file indices so F cycles *inside* a file
+  // caching and per-file indices (if you still use them)
   private formationFileCache: Record<string, any[]> = {};
   private formationIndexByFile: Record<string, number> = {};
 
@@ -37,46 +37,18 @@ export default class PlayScene extends Phaser.Scene {
   }
 
   preload() {
-    console.log(">>> PRELOAD running");
-
+    // same as before
     this.load.image("bg", "/sprites/bg.png");
     this.load.image("player", "/sprites/player.png");
     this.load.image("bullet", "/sprites/bullet.png");
     this.load.image("enemy", "/sprites/enemy.png");
-    this.load.once('complete', async () => {
-      try {
-        const texKeys = (this.textures as any).getTextureKeys?.() || [];
-        console.log('[ASSET][textures]', texKeys);
-        console.log('[ASSET][json]', this.cache.json.getKeys?.() || []);
-        console.log('[ASSET][audio]', this.cache.audio?.getKeys?.() || []);
-
-        // HEAD-check a few critical assets
-        const checkList: Array<[string, string]> = [
-          ['bg', '/sprites/bg.png'],
-          ['player', '/sprites/player.png'],
-          ['enemy', '/sprites/enemy.png'],
-          ['bullet', '/sprites/bullet.png'],
-        ];
-
-        for (const [key, url] of checkList) {
-          try {
-            const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
-            if (!res.ok) throw new Error(String(res.status));
-            console.log(`[ASSET OK] ${key} -> ${new URL(url, location.origin).href}`);
-          } catch (e) {
-            console.error(`[ASSET MISS] ${key} -> ${url}`, e);
-          }
-        }
-      } catch (e) {
-        console.error('[ASSET] sanity logger error', e);
-      }
-    });
   }
 
   create() {
-    logFlags();                      // actually call the flag logger
+    logFlags();
     console.log(">>> CREATE running");
 
+    // get initial size
     const { width, height } = this.scale;
 
     // --- Background ---
@@ -93,14 +65,10 @@ export default class PlayScene extends Phaser.Scene {
 
     // --- Controls ---
     this.cursors = this.input.keyboard.createCursorKeys();
-    this.spaceKey = this.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE
-    );
-
-    // --- Single F key (create once) ---
+    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.fKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
 
-    // Make canvas focusable and focus it so key events reach the game reliably
+    // focus canvas
     const canvas = (this.game.canvas as HTMLCanvasElement | null);
     if (canvas) {
       canvas.tabIndex = 0;
@@ -109,54 +77,41 @@ export default class PlayScene extends Phaser.Scene {
     }
 
     // --- Groups ---
-    this.bullets = this.physics.add.group({
-      classType: Bullet,
-      runChildUpdate: true,
-    });
-
-    this.enemies = this.physics.add.group({
-      classType: Enemy,
-      runChildUpdate: true,
-    });
-
-    this.enemyBullets = this.physics.add.group({
-      classType: Bullet,
-      runChildUpdate: true,
-    });
+    this.bullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
+    this.enemies = this.physics.add.group({ classType: Enemy, runChildUpdate: true });
+    this.enemyBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
 
     // --- Formation Manager ---
-    this.formationManager = new FormationManager(
-      this,
-      this.enemies,
-      this.enemyBullets
-    );
+    this.formationManager = new FormationManager(this, this.enemies, this.enemyBullets);
 
-    // --- HUD (simple score text) ---
-    this.scoreText = this.add
-      .text(12, 12, "Score: 0", { color: "#fff", fontSize: "16px" })
-      .setDepth(1000);
+    // --- HUD ---
+    this.scoreText = this.add.text(12, 12, "Score: 0", { color: "#fff", fontSize: "16px" }).setDepth(1000);
 
     // --- Collisions ---
     this.setupCollisions();
 
-    // --- Load formations from index.json ---
+    // --- Load formations / allies ---
     this.loadEnemyFormationsFromIndex();
     this.loadAllyFormations();
 
-    // attach F listener (event-based). This will operate on manualFileIndex and
-    // will advance the formation index inside that file (not the auto scheduler index).
+    // --- Resize handling ---
+    // Register resize event and call once to initialize layout
+    this.scale.on('resize', this.handleResize, this);
+    this.handleResize(this.scale.gameSize);
+
+    // --- F key: cycle ally formations (operates only on allyFormations)
     this.input.keyboard.on('keydown-F', () => {
-  if (!this.allyFormations.length) return;
+      if (!this.allyFormations.length) return;
+      this.allyFormationIndex = (this.allyFormationIndex + 1) % this.allyFormations.length;
+      const formation = this.allyFormations[this.allyFormationIndex];
+      console.log(`[PlayScene] Ally cycle → ${formation.id ?? '<no-id>'}`);
+      this.allyManager.applyFormation(formation);
+    });
+  }
 
-    this.allyFormationIndex =
-      (this.allyFormationIndex + 1) % this.allyFormations.length;
-
-    const formation = this.allyFormations[this.allyFormationIndex];
-    console.log(`[PlayScene] Ally cycle → ${formation.id}`);
-
-    this.allyManager.applyFormation(formation);
-  });
-
+  // cleanup listener on shutdown
+  shutdown() {
+    this.scale.off('resize', this.handleResize, this);
   }
 
   update(_time: number, delta: number) {
@@ -165,14 +120,10 @@ export default class PlayScene extends Phaser.Scene {
     // Background scroll
     this.bg.tilePositionY -= delta * 0.06;
 
-    // Player movement + shooting
+    // Player controls/shooting
     this.handlePlayerControls();
 
-    // handleFormationCycle no longer checks JustDown; ally update handled here or in helper
-    // (keep a small helper to update allies every frame)
-    this.handleFormationCycle();
-
-    // update ally positions every frame (single place)
+    // update allies each frame
     this.allyManager.update();
   }
 
@@ -180,211 +131,115 @@ export default class PlayScene extends Phaser.Scene {
   private handlePlayerControls() {
     this.player.setVelocity(0);
     const speed = 200;
-
-    if (this.cursors.left?.isDown) {
-      this.player.setVelocityX(-speed);
-    } else if (this.cursors.right?.isDown) {
-      this.player.setVelocityX(speed);
-    }
-
-    if (this.cursors.up?.isDown) {
-      this.player.setVelocityY(-speed);
-    } else if (this.cursors.down?.isDown) {
-      this.player.setVelocityY(speed);
-    }
-
-    if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-      this.player.fire(this.bullets);
-    }
+    if (this.cursors.left?.isDown) this.player.setVelocityX(-speed);
+    else if (this.cursors.right?.isDown) this.player.setVelocityX(speed);
+    if (this.cursors.up?.isDown) this.player.setVelocityY(-speed);
+    else if (this.cursors.down?.isDown) this.player.setVelocityY(speed);
+    if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.player.fire(this.bullets);
   }
 
-  // --- Collisions ---
+  // --- Collisions (unchanged) ---
   private setupCollisions() {
-    // bullets -> enemies
-    const onBulletHitsEnemy: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback =
-      (bObj, eObj) => {
-        const bullet = bObj as unknown as Bullet;
-        const enemy = eObj as unknown as Enemy;
+    const onBulletHitsEnemy: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (bObj, eObj) => {
+      const bullet = bObj as unknown as Bullet;
+      const enemy = eObj as unknown as Enemy;
+      this.bullets.killAndHide(bullet);
+      bullet.setActive(false).setVisible(false);
+      bullet.setVelocity?.(0, 0);
+      enemy.takeDamage?.(1);
+      this.score += 10;
+      this.scoreText.setText(`Score: ${this.score}`);
+    };
 
-        this.bullets.killAndHide(bullet);
-        bullet.setActive(false).setVisible(false);
-        bullet.setVelocity?.(0, 0);
+    this.physics.add.overlap(this.bullets, this.enemies, onBulletHitsEnemy, undefined, this);
 
-        enemy.takeDamage?.(1);
+    const onEnemyBulletHitsPlayer: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_pObj, bObj) => {
+      const bullet = bObj as unknown as Bullet;
+      this.enemyBullets.killAndHide(bullet);
+      bullet.setActive(false).setVisible(false);
+      bullet.setVelocity?.(0, 0);
+      this.player.takeDamage(1);
+    };
+    this.physics.add.overlap(this.player, this.enemyBullets, onEnemyBulletHitsPlayer, undefined, this);
 
-        this.score += 10;
-        this.scoreText.setText(`Score: ${this.score}`);
-      };
-
-    this.physics.add.overlap(
-      this.bullets,
-      this.enemies,
-      onBulletHitsEnemy,
-      undefined,
-      this
-    );
-
-    // enemyBullets -> player
-    const onEnemyBulletHitsPlayer: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback =
-      (_pObj, bObj) => {
-        const bullet = bObj as unknown as Bullet;
-        this.enemyBullets.killAndHide(bullet);
-        bullet.setActive(false).setVisible(false);
-        bullet.setVelocity?.(0, 0);
-
-        this.player.takeDamage(1);
-      };
-
-    this.physics.add.overlap(
-      this.player,
-      this.enemyBullets,
-      onEnemyBulletHitsPlayer,
-      undefined,
-      this
-    );
-
-    // player -> enemies (ramming damage)
-    const onPlayerHitsEnemy: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback =
-      (_pObj, eObj) => {
-        const enemy = eObj as unknown as Enemy;
-        this.player.takeDamage(1);
-
-        this.enemies.killAndHide(enemy);
-        enemy.setActive(false).setVisible(false);
-        enemy.setVelocity?.(0, 0);
-      };
-
-    this.physics.add.overlap(
-      this.player,
-      this.enemies,
-      onPlayerHitsEnemy,
-      undefined,
-      this
-    );
+    const onPlayerHitsEnemy: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_pObj, eObj) => {
+      const enemy = eObj as unknown as Enemy;
+      this.player.takeDamage(1);
+      this.enemies.killAndHide(enemy);
+      enemy.setActive(false).setVisible(false);
+      enemy.setVelocity?.(0, 0);
+    };
+    this.physics.add.overlap(this.player, this.enemies, onPlayerHitsEnemy, undefined, this);
   }
 
-  // --- Load formations sequentially from index.json ---
+  // --- Enemy loader (unchanged semantics) ---
   private async loadEnemyFormationsFromIndex(): Promise<void> {
-  try {
-    const res = await fetch("/formations/index.json");
-    const json = await res.json();
-    this.formationFiles = json.files ?? [];
-
-    if (!this.formationFiles.length) return;
-
-    this.currentFormationIndex = 0;
-
-    // auto-schedule enemy waves
-    this.time.addEvent({
-      delay: 10000,
-      loop: true,
-      callback: () => {
-        if (this.currentFormationIndex < this.formationFiles.length) {
-          const nextFile = this.formationFiles[this.currentFormationIndex];
-          console.log(`[PlayScene] Enemy formation: ${nextFile}`);
-          this.formationManager.loadAndScheduleFromFile(nextFile);
-          this.currentFormationIndex++;
-        }
-      },
-    });
-  } catch (err) {
-    console.error("[PlayScene] Failed to load enemy formations", err);
-  }
-}
-private allyFormations: any[] = [];
-private allyFormationIndex: number = 0;
-
-private async loadAllyFormations(): Promise<void> {
-  try {
-    const res = await fetch("/formations/insects.json");
-    const json = await res.json();
-    this.allyFormations = json.formations ?? [];
-
-    if (!this.allyFormations.length) {
-      console.warn("[PlayScene] No ally formations in insects.json");
-      return;
-    }
-
-    this.allyFormationIndex = 0;
-    console.log("[PlayScene] Ally formations loaded:", this.allyFormations.map(f => f.id));
-  } catch (err) {
-    console.error("[PlayScene] Failed to load ally formations", err);
-  }
-}
-
-
-
-  // --------------------
-  // Formation helpers
-  // --------------------
-
-  // Previously this checked JustDown; now it simply ensures allyManager exists.
-  // F presses are handled by keydown-F event listener in create().
-  private handleFormationCycle() {
-    // Keep this method in case you want to add time-based cycling logic
-    if (!this.allyManager) return;
-    // No JustDown here; event listener drives manual cycling.
-  }
-
-  // load file (cached) and apply the next formation inside it
-  private async loadAndApplyNextFormationInFile(filename: string) {
     try {
-      const formations = await this.loadFormationsFromFileCached(filename);
-      if (!formations.length) {
-        console.warn(`[PlayScene] no formations in ${filename}`);
-        return;
-      }
-
-      const prevIndex = this.formationIndexByFile[filename] ?? -1;
-      const nextIndex = (prevIndex + 1) % formations.length;
-      this.formationIndexByFile[filename] = nextIndex;
-
-      const formation = formations[nextIndex];
-      if (!formation || !Array.isArray(formation.ships)) {
-        console.error('[PlayScene] formation malformed', formation);
-        return;
-      }
-
-      // apply — AllyManager will clear previous allies
-      this.allyManager.applyFormation(formation);
-      console.log(`[PlayScene] Applied formation id=${formation.id ?? '<no-id>'} index=${nextIndex} from ${filename}`);
-    } catch (err) {
-      console.error('[PlayScene] Failed to load/apply formation', err);
-    }
-  }
-
-  // Fetch + normalize + cache formations[] from a file
-  private async loadFormationsFromFileCached(filename: string): Promise<any[]> {
-    if (this.formationFileCache[filename]) return this.formationFileCache[filename];
-
-    try {
-      console.log(`[PlayScene] fetching formations file: ${filename}`);
-      const res = await fetch(`/formations/${filename}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const res = await fetch("/formations/index.json");
       const json = await res.json();
-      console.log('[PlayScene] raw file JSON:', json);
-
-      let formations: any[] = [];
-      if (Array.isArray(json)) {
-        formations = json;
-      } else if (json && Array.isArray(json.formations)) {
-        formations = json.formations;
-      } else if (json && json.ships) {
-        formations = [json];
-      } else {
-        throw new Error('No formations[] found in file');
-      }
-
-      this.formationFileCache[filename] = formations;
-      if (this.formationIndexByFile[filename] === undefined) {
-        this.formationIndexByFile[filename] = -1;
-      }
-
-      console.log(`[PlayScene] loaded ${formations.length} formations from ${filename}`);
-      return formations;
+      this.formationFiles = json.files ?? [];
+      if (!this.formationFiles.length) return;
+      this.currentFormationIndex = 0;
+      this.time.addEvent({
+        delay: 10000,
+        loop: true,
+        callback: () => {
+          if (this.currentFormationIndex < this.formationFiles.length) {
+            const nextFile = this.formationFiles[this.currentFormationIndex];
+            console.log(`[PlayScene] Enemy formation: ${nextFile}`);
+            this.formationManager.loadAndScheduleFromFile(nextFile);
+            this.currentFormationIndex++;
+          }
+        },
+      });
     } catch (err) {
-      console.error(`[PlayScene] failed to load formations file ${filename}`, err);
-      return [];
+      console.error("[PlayScene] Failed to load enemy formations", err);
+    }
+  }
+
+  // --- Ally loader (always insects.json) ---
+  private async loadAllyFormations(): Promise<void> {
+    try {
+      const res = await fetch("/formations/insects.json");
+      const json = await res.json();
+      // normalized formations array
+      this.allyFormations = json.formations ?? [];
+      if (!this.allyFormations.length) {
+        console.warn("[PlayScene] No ally formations in insects.json");
+        return;
+      }
+      this.allyFormationIndex = 0;
+      console.log("[PlayScene] Ally formations loaded:", this.allyFormations.map((f: any) => f.id));
+    } catch (err) {
+      console.error("[PlayScene] Failed to load ally formations", err);
+    }
+  }
+
+  // --------------------
+  // Resize handler
+  // --------------------
+  private handleResize(gameSize: Phaser.Structs.Size) {
+    const { width, height } = gameSize;
+
+    // resize the tile background to fill new size
+    if (this.bg) {
+      this.bg.setSize(width, height);
+    }
+
+    // reposition HUD
+    if (this.scoreText) {
+      this.scoreText.setPosition(12, 12);
+    }
+
+    // reposition player (keep relative)
+    if (this.player) {
+      this.player.setPosition(width * 0.5, height * 0.8);
+    }
+
+    // tell AllyManager to recompute offsets after the new size
+    // (AllyManager should implement recomputeOffsets(width,height))
+    if ((this.allyManager as any)?.recomputeOffsets instanceof Function) {
+      (this.allyManager as any).recomputeOffsets(width, height);
     }
   }
 }
