@@ -23,6 +23,13 @@ export default function PhaserGame() {
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   render: { pixelArt: true, roundPixels: true },
+   // 👇 force-enable inputs
+        input: {
+          keyboard: true,
+          mouse: true,
+          touch: true,
+          gamepad: false,
+        },
 };
 
 
@@ -45,6 +52,8 @@ export default function PhaserGame() {
     margin: "0",
     padding: "0",
     overflow: "hidden",
+    pointerEvents: "auto",
+    touchAction: "none", // 👈 prevent touch scrolling
   }}
 />
 

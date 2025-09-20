@@ -7,28 +7,35 @@ export default class InputManager {
   private player: Player;
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private fireCooldown = 0;
-  private pointerDown = false; // track if touch/mouse is held down
+  private pointerDown = false;
+  private debugText!: Phaser.GameObjects.Text; // 👈 overlay text
 
   constructor(scene: Phaser.Scene, player: Player) {
     this.scene = scene;
     this.player = player;
     this.cursors = scene.input.keyboard.createCursorKeys();
 
-    // Pointer/touch handling
-    this.scene.input.on('pointerdown', () => {
+    // --- Debug overlay ---
+    this.debugText = this.scene.add
+      .text(12, this.scene.scale.height - 28, 'TOUCH: UP', {
+        fontSize: '14px',
+        color: '#ff0',
+        backgroundColor: '#000',
+      })
+      .setDepth(2000);
+
+    // Pointer/touch handlers
+    this.scene.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       this.pointerDown = true;
+      this.debugText.setText(`TOUCH: DOWN (${Math.floor(p.x)},${Math.floor(p.y)})`);
     });
 
     this.scene.input.on('pointerup', () => {
       this.pointerDown = false;
+      this.debugText.setText('TOUCH: UP');
     });
   }
 
-  /**
-   * Update movement + shooting each frame
-   * @param delta - time step (ms)
-   * @param bullets - shared bullet group from PlayScene
-   */
   update(delta: number, bullets: Phaser.Physics.Arcade.Group) {
     const dt = delta / 1000;
     const speed = 280;
