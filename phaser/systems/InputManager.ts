@@ -10,10 +10,33 @@ export default class InputManager {
   private pointerDown = false;
   private debugText!: Phaser.GameObjects.Text; // 👈 overlay text
 
+  private lastTapTime = -Infinity;
+  private doubleTapThreshold = 400; // ms
+
+  private handlePointerDown(pointer: Phaser.Input.Pointer) {
+    const now = this.scene.time.now;
+    console.log(`[InputManager] pointerdown at ${now}, lastTap=${this.lastTapTime}`);
+     // only check for double-tap if we have a prior timestamp
+    if (isFinite(this.lastTapTime) && now - this.lastTapTime < this.doubleTapThreshold) {
+      console.log("[InputManager] Double tap detected → emit cycleFormation");
+      this.scene.events.emit("cycleFormation");
+      // reset so a triple-tap doesn't immediately retrigger
+      this.lastTapTime = -Infinity;
+      return;
+    }
+    if (now - this.lastTapTime < this.doubleTapThreshold) {
+      this.scene.events.emit("cycleFormation");
+      console.log("[InputManager] Double tap detected → emit cycleFormation");
+    }
+      this.lastTapTime = now;
+  }
+
   constructor(scene: Phaser.Scene, player: Player) {
     this.scene = scene;
     this.player = player;
     this.cursors = scene.input.keyboard.createCursorKeys();
+
+    this.scene.input.on("pointerdown", this.handlePointerDown, this);
 
     // --- Debug overlay ---
     this.debugText = this.scene.add
@@ -67,4 +90,6 @@ export default class InputManager {
       this.player.fire(bullets);
     }
   }
+
+  
 }

@@ -5,6 +5,7 @@ import Bullet from "../entities/Bullet";
 import Enemy from "../entities/Enemy";
 import FormationManager from "../systems/FormationManager";
 import AllyManager from "../systems/AllyManager";
+import InputManager from "../systems/InputManager";
 import { logFlags } from "../../src/flags";
 
 export default class PlayScene extends Phaser.Scene {
@@ -26,6 +27,9 @@ export default class PlayScene extends Phaser.Scene {
 
   private allyFormations: any[] = [];
   private allyFormationIndex: number = 0;
+
+  // new InputManager instance
+  private inputManager!: InputManager;
 
   constructor() {
     super("play");
@@ -97,33 +101,20 @@ export default class PlayScene extends Phaser.Scene {
       this.allyManager.applyFormation(formation);
     });
 
-    // --- Touch / Pointer handling ---
-    this.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
-      console.log("[PlayScene] pointerdown at", p.x, p.y);
-      this.player.x = Phaser.Math.Clamp(p.x, 0, this.scale.width);
-      this.player.y = Phaser.Math.Clamp(p.y, 0, this.scale.height);
-
-      this.time.addEvent({
-        delay: 150,
-        loop: true,
-        callback: () => {
-          if (p.isDown) {
-            this.player.fire(this.bullets);
-          }
-        },
-      });
+    // --- Listen for cycleFormation (from InputManager double-tap) ---
+    this.events.on("cycleFormation", () => {
+      console.log("[PlayScene] cycleFormation received (double-tap)");
+      if (!this.allyFormations.length) return;
+      this.allyFormationIndex =
+        (this.allyFormationIndex + 1) % this.allyFormations.length;
+      const formation = this.allyFormations[this.allyFormationIndex];
+      console.log(`[PlayScene] Ally cycle (double-tap) → ${formation.id ?? "<no-id>"}`);
+      this.allyManager.applyFormation(formation);
     });
 
-    this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
-      if (p.isDown) {
-        this.player.x = Phaser.Math.Clamp(p.x, 0, this.scale.width);
-        this.player.y = Phaser.Math.Clamp(p.y, 0, this.scale.height);
-      }
-    });
-
-    this.input.on("pointerup", () => {
-      console.log("[PlayScene] pointerup");
-    });
+    // --- InputManager (touch / mouse / keyboard combos) ---
+    this.inputManager = new InputManager(this, this.player);
+    console.log("[PlayScene] InputManager constructed");
   }
 
   update(_time: number, delta: number) {
@@ -131,6 +122,12 @@ export default class PlayScene extends Phaser.Scene {
 
     this.bg.tilePositionY -= delta * 0.06;
     this.handlePlayerControls();
+
+    // update InputManager (passes bullets group for shooting)
+    if (this.inputManager) {
+      this.inputManager.update(delta, this.bullets);
+    }
+
     this.allyManager.update();
   }
 
