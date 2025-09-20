@@ -13,13 +13,18 @@ export default function PhaserGame() {
   useEffect(() => {
     if (!gameRef.current) {
       const config: Phaser.Types.Core.GameConfig = {
-        type: Phaser.AUTO,
-        width: 800,
-        height: 600,
-        physics: { default: "arcade" },
-        scene: [PlayScene],   // 👈 now using your real scene
-        parent: "phaser-container",
-      };
+  type: Phaser.AUTO,
+  parent: "phaser-container",
+  backgroundColor: "#000000",
+  physics: { default: "arcade" },
+  scene: [PlayScene],
+  scale: {
+    mode: Phaser.Scale.RESIZE,          // resizes with parent div
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
+  render: { pixelArt: true, roundPixels: true },
+};
+
 
       gameRef.current = new Phaser.Game(config);
     }
@@ -32,14 +37,16 @@ export default function PhaserGame() {
   }, []);
 
   return (
-    <div
-      id="phaser-container"
-      style={{
-        width: "800px",
-        height: "600px",
-        margin: "0 auto",
-        border: "2px solid #444",
-      }}
-    />
+   <div
+  id="phaser-container"
+  style={{
+    width: "100vw",
+    height: "100vh",
+    margin: "0",
+    padding: "0",
+    overflow: "hidden",
+  }}
+/>
+
   );
 }
