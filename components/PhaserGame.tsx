@@ -4,6 +4,9 @@ import { useEffect, useRef } from "react";
 import * as Phaser from "phaser";
 
 import PlayScene from "../phaser/scenes/PlayScene";
+import MenuScene from "../phaser/scenes/MenuScene";
+import BootScene from "../phaser/scenes/BootScene";
+import PauseOverlayScene from "../phaser/scenes/PauseOverlayScene";
 
 
 
@@ -17,7 +20,7 @@ export default function PhaserGame() {
   parent: "phaser-container",
   backgroundColor: "#000000",
   physics: { default: "arcade" },
-  scene: [PlayScene],
+  scene: [BootScene, MenuScene, PlayScene, PauseOverlayScene],
   scale: {
     mode: Phaser.Scale.RESIZE,          // resizes with parent div
     autoCenter: Phaser.Scale.CENTER_BOTH,

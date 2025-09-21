@@ -19,6 +19,7 @@ export default class PlayScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private fKey!: Phaser.Input.Keyboard.Key;
+  private escKey!: Phaser.Input.Keyboard.Key;
   private score: number = 0;
   private scoreText!: Phaser.GameObjects.Text;
 
@@ -32,7 +33,9 @@ export default class PlayScene extends Phaser.Scene {
   private inputManager!: InputManager;
 
   constructor() {
-    super("play");
+    //super("play");
+    super('play');
+
   }
 
   preload() {
@@ -64,14 +67,20 @@ export default class PlayScene extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys();
     this.spaceKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
+
     );
+    // --- F key for cycling ally formations ---
     this.fKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+
+      // Register the ESC key
+    this.escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
 
     // --- Groups ---
     this.bullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
     this.enemies = this.physics.add.group({ classType: Enemy, runChildUpdate: true });
     this.enemyBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
-
+  
     // --- Formation Manager ---
     this.formationManager = new FormationManager(this, this.enemies, this.enemyBullets);
 
@@ -127,9 +136,19 @@ export default class PlayScene extends Phaser.Scene {
     if (this.inputManager) {
       this.inputManager.update(delta, this.bullets);
     }
+ 
+  // In PlayScene update()
+    if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
+      console.log("[Scene] Paused");
+      this.scene.launch("pauseOverlay");  // start overlay
+      this.scene.pause();                 // pause play scene
+    }
+
 
     this.allyManager.update();
   }
+
+  
 
   private handlePlayerControls() {
     this.player.setVelocity(0);
