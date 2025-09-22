@@ -85,8 +85,9 @@ export default class FormationManager {
 
     const enemy = this.enemies.get(x, y, "enemy") as Enemy;
     if (!enemy) return;
+    const type = spec.type ?? "scout";
 
-    enemy.init(idx, x, y, vx, vy, size, hp);
+    enemy.init(idx, x, y, vx, vy, size, hp, type);
     enemy.startFiring(this.scene, this.enemyBullets);
 
     console.log("[FormationManager] Spawned enemy", idx, {
