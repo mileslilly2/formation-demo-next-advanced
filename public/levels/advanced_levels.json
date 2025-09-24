@@ -1,0 +1,170 @@
+[
+  {
+    "level_id": "lvl_63a8fe1a-9031-44f9-a5d3-68bea0156a9f",
+    "artist": "Michael Jackson",
+    "recording_mbid": "63a8fe1a-9031-44f9-a5d3-68bea0156a9f",
+    "templates": {
+      "stinger": {
+        "type": "stinger",
+        "hp": 10,
+        "speed": 200
+      }
+    },
+    "features": {
+      "low_level.lowlevel.mfcc.cov": null,
+      "low_level.lowlevel.mfcc.icov": null,
+      "low_level.lowlevel.mfcc.mean": null
+    },
+    "raw_feature_values": {
+      "low_level.lowlevel.mfcc.cov": 226.9334070752361,
+      "low_level.lowlevel.mfcc.icov": 0.00012913189237563668,
+      "low_level.lowlevel.mfcc.mean": -39.49267789955253
+    },
+    "percentiles": {
+      "low_level.lowlevel.mfcc.cov": 1.0,
+      "low_level.lowlevel.mfcc.icov": 0.167,
+      "low_level.lowlevel.mfcc.mean": 0.5
+    },
+    "composite_score": 0.556
+  },
+  {
+    "level_id": "lvl_f4916d64-111a-426a-a6d6-b558f3ea3cd5",
+    "artist": "Michael Jackson",
+    "recording_mbid": "f4916d64-111a-426a-a6d6-b558f3ea3cd5",
+    "templates": {
+      "stinger": {
+        "type": "stinger",
+        "hp": 10,
+        "speed": 200
+      }
+    },
+    "features": {
+      "low_level.lowlevel.mfcc.cov": null,
+      "low_level.lowlevel.mfcc.icov": null,
+      "low_level.lowlevel.mfcc.mean": null
+    },
+    "raw_feature_values": {
+      "low_level.lowlevel.mfcc.cov": 170.12695224842597,
+      "low_level.lowlevel.mfcc.icov": 0.00016493310943682177,
+      "low_level.lowlevel.mfcc.mean": -43.107969684108596
+    },
+    "percentiles": {
+      "low_level.lowlevel.mfcc.cov": 0.833,
+      "low_level.lowlevel.mfcc.icov": 0.333,
+      "low_level.lowlevel.mfcc.mean": 0.167
+    },
+    "composite_score": 0.444
+  },
+  {
+    "level_id": "lvl_e6febf73-c4e7-4469-b919-abebce1de0e0",
+    "artist": "Elton John",
+    "recording_mbid": "e6febf73-c4e7-4469-b919-abebce1de0e0",
+    "templates": {
+      "drone": {
+        "type": "drone",
+        "hp": 30,
+        "speed": 80
+      }
+    },
+    "features": {
+      "low_level.lowlevel.mfcc.cov": null,
+      "low_level.lowlevel.mfcc.icov": null,
+      "low_level.lowlevel.mfcc.mean": null
+    },
+    "raw_feature_values": {
+      "low_level.lowlevel.mfcc.cov": 58.78556567530461,
+      "low_level.lowlevel.mfcc.icov": 0.0003976358294334272,
+      "low_level.lowlevel.mfcc.mean": -35.384117924259996
+    },
+    "percentiles": {
+      "low_level.lowlevel.mfcc.cov": 0.167,
+      "low_level.lowlevel.mfcc.icov": 1.0,
+      "low_level.lowlevel.mfcc.mean": 1.0
+    },
+    "composite_score": 0.722
+  },
+  {
+    "level_id": "lvl_16d2c90d-d688-4465-bb76-4a9e94b80729",
+    "artist": "Queen",
+    "recording_mbid": "16d2c90d-d688-4465-bb76-4a9e94b80729",
+    "templates": {
+      "drone": {
+        "type": "drone",
+        "hp": 30,
+        "speed": 80
+      }
+    },
+    "features": {
+      "low_level.lowlevel.mfcc.cov": null,
+      "low_level.lowlevel.mfcc.icov": null,
+      "low_level.lowlevel.mfcc.mean": null
+    },
+    "raw_feature_values": {
+      "low_level.lowlevel.mfcc.cov": 81.40095872107644,
+      "low_level.lowlevel.mfcc.icov": 0.00020790686331106388,
+      "low_level.lowlevel.mfcc.mean": -37.08299422716977
+    },
+    "percentiles": {
+      "low_level.lowlevel.mfcc.cov": 0.333,
+      "low_level.lowlevel.mfcc.icov": 0.833,
+      "low_level.lowlevel.mfcc.mean": 0.667
+    },
+    "composite_score": 0.611
+  },
+  {
+    "level_id": "lvl_b6342be5-6b6f-433c-9037-dd92be96a4a5",
+    "artist": "Queen",
+    "recording_mbid": "b6342be5-6b6f-433c-9037-dd92be96a4a5",
+    "templates": {
+      "drone": {
+        "type": "drone",
+        "hp": 30,
+        "speed": 80
+      }
+    },
+    "features": {
+      "low_level.lowlevel.mfcc.cov": null,
+      "low_level.lowlevel.mfcc.icov": null,
+      "low_level.lowlevel.mfcc.mean": null
+    },
+    "raw_feature_values": {
+      "low_level.lowlevel.mfcc.cov": 83.98358529438428,
+      "low_level.lowlevel.mfcc.icov": 0.0002024790306814032,
+      "low_level.lowlevel.mfcc.mean": -37.034238338458074
+    },
+    "percentiles": {
+      "low_level.lowlevel.mfcc.cov": 0.5,
+      "low_level.lowlevel.mfcc.icov": 0.667,
+      "low_level.lowlevel.mfcc.mean": 0.833
+    },
+    "composite_score": 0.667
+  },
+  {
+    "level_id": "lvl_da9f6925-84b8-4048-ada3-47ea30851397",
+    "artist": "Eminem",
+    "recording_mbid": "da9f6925-84b8-4048-ada3-47ea30851397",
+    "templates": {
+      "stinger": {
+        "type": "stinger",
+        "hp": 10,
+        "speed": 200
+      }
+    },
+    "features": {
+      "low_level.lowlevel.mfcc.cov": null,
+      "low_level.lowlevel.mfcc.icov": null,
+      "low_level.lowlevel.mfcc.mean": null
+    },
+    "raw_feature_values": {
+      "low_level.lowlevel.mfcc.cov": 167.49262767726557,
+      "low_level.lowlevel.mfcc.icov": 0.00019661868495238818,
+      "low_level.lowlevel.mfcc.mean": -40.19134073076847
+    },
+    "percentiles": {
+      "low_level.lowlevel.mfcc.cov": 0.667,
+      "low_level.lowlevel.mfcc.icov": 0.5,
+      "low_level.lowlevel.mfcc.mean": 0.333
+    },
+    "composite_score": 0.5
+  }
+]
