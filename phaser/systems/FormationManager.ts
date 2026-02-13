@@ -1,3 +1,4 @@
+// phaser/systems/FormationManager.ts
 import * as Phaser from "phaser";
 import Enemy from "../entities/Enemy";
 import Bullet from "../entities/Bullet";
@@ -82,11 +83,18 @@ export default class FormationManager {
 
     const size = spec.size ?? 48;
     const hp = spec.hp ?? 1;
+    const type = spec.type ?? "scout";
 
     const enemy = this.enemies.get(x, y, "enemy") as Enemy;
     if (!enemy) return;
 
-    enemy.init(idx, x, y, vx, vy, size, hp);
+    // reset/reuse from pool safely
+    enemy.setActive(true).setVisible(true);
+    if (enemy.body) {
+      enemy.body.reset(x, y);
+    }
+
+    enemy.init(idx, x, y, vx, vy, size, hp, type);
     enemy.startFiring(this.scene, this.enemyBullets);
 
     console.log("[FormationManager] Spawned enemy", idx, {
@@ -96,6 +104,7 @@ export default class FormationManager {
       vy,
       size,
       hp,
+      type,
     });
   }
 }

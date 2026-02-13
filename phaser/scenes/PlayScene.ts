@@ -162,34 +162,43 @@ export default class PlayScene extends Phaser.Scene {
     }
   }
 
-  private setupCollisions() {
-    this.physics.add.overlap(this.bullets, this.enemies, (bObj, eObj) => {
-      const bullet = bObj as Bullet;
-      const enemy = eObj as Enemy;
-      this.bullets.killAndHide(bullet);
-      bullet.setActive(false).setVisible(false);
-      bullet.setVelocity?.(0, 0);
-      enemy.takeDamage?.(1);
+ private setupCollisions() {
+  // Player bullets → enemies
+  this.physics.add.overlap(this.bullets, this.enemies, (bObj, eObj) => {
+    const bullet = bObj as Bullet;
+    const enemy = eObj as Enemy;
+
+    if (!bullet.active || !enemy.active) return;
+    if (bullet.owner === "enemy") return; // ignore enemy bullets
+
+    bullet.kill(); // recycle bullet
+
+    const killed = enemy.takeDamage(bullet.damage);
+    if (killed) {
       this.score += 10;
       this.scoreText.setText(`Score: ${this.score}`);
-    });
+    }
+  });
 
-    this.physics.add.overlap(this.player, this.enemyBullets, (_pObj, bObj) => {
-      const bullet = bObj as Bullet;
-      this.enemyBullets.killAndHide(bullet);
-      bullet.setActive(false).setVisible(false);
-      bullet.setVelocity?.(0, 0);
-      this.player.takeDamage(1);
-    });
+  // Enemy bullets → player
+  this.physics.add.overlap(this.player, this.enemyBullets, (_p, bObj) => {
+    const bullet = bObj as Bullet;
+    if (!bullet.active) return;
 
-    this.physics.add.overlap(this.player, this.enemies, (_pObj, eObj) => {
-      const enemy = eObj as Enemy;
-      this.player.takeDamage(1);
-      this.enemies.killAndHide(enemy);
-      enemy.setActive(false).setVisible(false);
-      enemy.setVelocity?.(0, 0);
-    });
-  }
+    bullet.kill(); // recycle bullet
+    this.player.takeDamage(bullet.damage);
+  });
+
+  // Player → enemies (collision)
+  this.physics.add.overlap(this.player, this.enemies, (_p, eObj) => {
+    const enemy = eObj as Enemy;
+    if (!enemy.active) return;
+
+    this.player.takeDamage(enemy.hp ?? 1);
+    enemy.destroy(); // cleanup + stop firing timers
+  });
+}
+
 
   private async loadEnemyFormationsFromIndex(): Promise<void> {
     try {
